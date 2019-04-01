@@ -2,11 +2,11 @@ package com.jkojote.server;
 
 public interface QueryString {
 
-	Iterable<Parameter> getParameters();
+	Iterable<QueryParameter> getParameters();
 
 	String getParameterValue(String name);
 
-	interface Parameter {
+	interface QueryParameter {
 
 		String getKey();
 

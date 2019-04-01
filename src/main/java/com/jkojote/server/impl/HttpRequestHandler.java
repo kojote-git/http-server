@@ -49,13 +49,13 @@ class HttpRequestHandler implements Runnable {
 	private void handleRequest(InputStream in, OutputStream out) throws IOException {
 		try {
 			HttpRequest request = readRequest(in);
-			RequestResolver.ResolvedRequest resolvedRequest = resolver.resolveRequest(request);
+			RequestResolver.RequestResolution resolvedRequest = resolver.resolveRequest(request);
 			if (resolvedRequest == null) {
 				writeResponse(out, Responses.NOT_FOUND);
 				return;
 			}
 			ControllerMethod method = resolvedRequest.getMethod();
-			PathVariables pathVariables = resolvedRequest.getVariables();
+			PathVariables pathVariables = resolvedRequest.getPathVariables();
 			writeResponse(out, method.process(request, pathVariables));
 		} catch (BadRequestException e) {
 			writeResponse(out, Responses.BAD_REQUEST);

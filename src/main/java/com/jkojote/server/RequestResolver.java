@@ -2,13 +2,13 @@ package com.jkojote.server;
 
 public interface RequestResolver {
 
-	ResolvedRequest resolveRequest(HttpRequest request);
+	RequestResolution resolveRequest(HttpRequest request);
 
-	interface ResolvedRequest {
+	interface RequestResolution {
 
 		ControllerMethod getMethod();
 
-		PathVariables getVariables();
+		PathVariables getPathVariables();
 	}
 
 }
