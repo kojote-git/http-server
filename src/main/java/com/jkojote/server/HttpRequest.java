@@ -4,7 +4,7 @@ public interface HttpRequest {
 
 	String getRequestLine();
 
-	String getResourceUri();
+	String getPath();
 
 	HttpMethod getMethod();
 

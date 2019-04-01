@@ -3,6 +3,7 @@ package com.jkojote.server.impl;
 import com.jkojote.server.QueryString;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -11,10 +12,12 @@ class QueryStringImpl implements QueryString {
 
 	QueryStringImpl(String queryString, boolean ignoreMalformedParameters) {
 		this.parameters = new HashMap<>();
-		QueryStringTokenizer tokenizer =
-			new QueryStringTokenizer(queryString, ignoreMalformedParameters);
-		while (tokenizer.nextToken()) {
-			parameters.put(tokenizer.getKey(), tokenizer.getValue());
+		if (!queryString.isEmpty()) {
+			QueryStringTokenizer tokenizer =
+					new QueryStringTokenizer(queryString, ignoreMalformedParameters);
+			while (tokenizer.nextToken()) {
+				parameters.put(tokenizer.getKey(), tokenizer.getValue());
+			}
 		}
 	}
 
@@ -26,7 +29,7 @@ class QueryStringImpl implements QueryString {
 	public Iterable<QueryParameter> getParameters() {
 		return parameters.entrySet().stream()
 			.map(ParameterImpl::new)
-			.collect(Collectors.toList());
+			.collect(Collectors.toCollection(LinkedList::new));
 	}
 
 	@Override

@@ -62,18 +62,20 @@ class HttpRequestHandler implements Runnable {
 		}
 	}
 
-	//TODO
 	private HttpRequest readRequest(InputStream in) throws IOException {
-		RequestLine requestLine = readRequestLine(in);
+		String firstLine = readLine(in);
+		RequestLine requestLine = parseRequestLine(firstLine);
 		Map<HeaderName, String> headers = readHeaders(in);
 		long contentLength = getContentLength(headers);
 		HttpRequestBody body = getRequestBody(contentLength, in);
-		QueryString queryString = extractQueryString(requestLine);
-		return null;
+		QueryString queryString = extractQueryString(requestLine, true);
+		return new HttpRequestImpl(
+			firstLine, requestLine.path, requestLine.method,
+			body, queryString, headers
+		);
 	}
 
-	private RequestLine readRequestLine(InputStream in) throws IOException {
-		String requestLine = readLine(in);
+	private RequestLine parseRequestLine(String requestLine) {
 		Matcher methodMatcher = METHOD_PATTERN.matcher(requestLine);
 		Matcher uriMatcher = URL_PATTERN.matcher(requestLine);
 		if (!methodMatcher.find()) {
@@ -99,10 +101,14 @@ class HttpRequestHandler implements Runnable {
 		return headers;
 	}
 
-	//TODO
-	private QueryString extractQueryString(RequestLine requestLine) {
-		String url = requestLine.url;
-		return null;
+	private QueryString extractQueryString(RequestLine requestLine, boolean ignoreMalformedParameters) {
+		String url = requestLine.path;
+		int beginIndex = url.indexOf('?');
+		if (beginIndex == -1) {
+			return new QueryStringImpl("");
+		}
+		String queryString = url.substring(beginIndex);
+		return new QueryStringImpl(queryString, ignoreMalformedParameters);
 	}
 
 	private long getContentLength(Map<HeaderName, String> headers) {
@@ -120,17 +126,17 @@ class HttpRequestHandler implements Runnable {
 
 	private class RequestLine {
 		private HttpMethod method;
-		private String url;
+		private String path;
 
 		RequestLine(HttpMethod method, String url) {
 			this.method = method;
-			this.url = url;
+			this.path = url;
 		}
 	}
 
 	// TODO
 	private void writeResponse(OutputStream out, HttpResponse response) {
-
+		
 	}
 
 	private String readLine(InputStream in) throws IOException {

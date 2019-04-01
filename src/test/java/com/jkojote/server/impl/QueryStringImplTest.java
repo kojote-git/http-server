@@ -45,6 +45,12 @@ public class QueryStringImplTest {
 		checkParameter(queryString, "c", "3");
 	}
 
+	@Test
+	public void initializeEmpty() {
+		QueryString queryString = new QueryStringImpl("");
+		assertFalse(queryString.getParameters().iterator().hasNext());
+	}
+
 	private void checkParameter(QueryString queryString, String key, String expectedValue) {
 		assertEquals(expectedValue, queryString.getParameterValue(key));
 	}
