@@ -1,7 +1,7 @@
 package com.jkojote.server.impl;
 
-import com.jkojote.server.HttpHeader;
 import com.jkojote.server.HttpMethod;
+import com.jkojote.server.HttpResponse;
 import com.jkojote.server.HttpStatus;
 import com.jkojote.server.RequestResolver;
 import com.jkojote.server.bodies.ByteResponseBody;
@@ -13,50 +13,70 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.Socket;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class HttpRequestHandlerTest {
-	private Socket socket;
-	private RequestResolver resolver;
-	private ByteArrayOutputStream responseStream;
-	private byte[] expectedResponse;
 
-	@Before
-	public void before() throws IOException {
-		responseStream = new ByteArrayOutputStream();
-		socket = mock(Socket.class);
+	@Test
+	public void handleRequest_case1() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("request_case1", responseStream);
+		HttpResponse response = HttpResponseBuilder.create()
+			.addHeader("Content-type", "text/plain")
+			.addHeader("Content-length", "" + 5)
+			.setStatus(HttpStatus.of(200, "OK"))
+			.setResponseBody(new ByteResponseBody("hello".getBytes()))
+			.build();
+
+		RequestResolver resolver = new MockRequestResolver((httpRequest, pathVariables) -> {
+			assertEquals("GET / HTTP/1.1", httpRequest.getRequestLine());
+			assertEquals(HttpMethod.GET, httpRequest.getMethod());
+			return response;
+		});
+
+		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
+		handler.run();
+		assertEquals(new MockHttpResponse(responseStream.toByteArray()), response);
+	}
+
+	@Test
+	public void handleRequest_case2() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("request_case2", responseStream);
+		RequestResolver resolver = new MockRequestResolver((req, vars) -> null);
+		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
+		handler.setOnBadRequest(Responses.BAD_REQUEST);
+		handler.run();
+		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.BAD_REQUEST);
+	}
+
+	@Test
+	public void handleRequest_case3() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("request_case3", responseStream);
+		RequestResolver resolver = new MockRequestResolver(null);
+		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
+		handler.setOnNotFound(Responses.NOT_FOUND);
+		handler.run();
+		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.NOT_FOUND);
+	}
+
+	private Socket mockSocketWithRequest(String pathToRequest, OutputStream responseStream) throws IOException {
+		Socket socket = mock(Socket.class);
 		when(socket.getInputStream()).then(mock -> {
 			try {
-				byte[] request = IOUtils.readResource("request");
+				byte[] request = IOUtils.readResource(pathToRequest);
 				return new ByteArrayInputStream(request);
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		});
 		when(socket.getOutputStream()).then(mock -> responseStream);
-		expectedResponse = IOUtils.readResource("response");
-	}
-
-	@Test
-	public void handleRequest() {
-		resolver = new MockRequestResolver((httpRequest, pathVariables) -> {
-			assertEquals("GET / HTTP/1.1", httpRequest.getRequestLine());
-			assertEquals(HttpMethod.GET, httpRequest.getMethod());
-			String response = "hello";
-			return HttpResponseBuilder.create()
-				.addHeader("Content-type", "text/plain")
-				.addHeader("Content-length", "" + 5)
-				.setStatus(HttpStatus.of(200, "OK"))
-				.setResponseBody(new ByteResponseBody(response.getBytes()))
-				.build();
-		});
-		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
-		handler.run();
-		assertArrayEquals(expectedResponse, responseStream.toByteArray());
+		return socket;
 	}
 }

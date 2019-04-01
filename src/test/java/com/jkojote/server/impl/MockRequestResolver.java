@@ -9,7 +9,11 @@ class MockRequestResolver implements RequestResolver {
 	private RequestResolution resolution;
 
 	MockRequestResolver(ControllerMethod method) {
-		this.resolution = new MockRequestResolution(method);
+		if (method == null) {
+			this.resolution = null;
+		} else {
+			this.resolution = new MockRequestResolution(method);
+		}
 	}
 
 	@Override

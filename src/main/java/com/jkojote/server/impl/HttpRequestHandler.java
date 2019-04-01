@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.jkojote.server.RequestResolver.RequestResolution;
+
 class HttpRequestHandler implements Runnable {
 	static final Pattern METHOD_PATTERN = Pattern.compile(
 		"GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD"
@@ -38,6 +40,8 @@ class HttpRequestHandler implements Runnable {
 
 	private Socket socket;
 	private RequestResolver resolver;
+	private HttpResponse onNotFound;
+	private HttpResponse onBadRequest;
 
 	HttpRequestHandler(Socket socket, RequestResolver resolver) {
 		this.socket = socket;
@@ -54,19 +58,30 @@ class HttpRequestHandler implements Runnable {
 		}
 	}
 
+	// temporal
+	void setOnBadRequest(HttpResponse onBadRequest) {
+		this.onBadRequest = onBadRequest;
+	}
+
+	// temporal
+	void setOnNotFound(HttpResponse onNotFound) {
+		this.onNotFound = onNotFound;
+	}
+
+	// TODO possible NPE
 	private void handleRequest(InputStream in, OutputStream out) throws IOException {
 		try {
 			HttpRequest request = readRequest(in);
-			RequestResolver.RequestResolution resolvedRequest = resolver.resolveRequest(request);
-			if (resolvedRequest == null) {
-				writeResponse(out, Responses.NOT_FOUND);
+			RequestResolution requestResolution = resolver.resolveRequest(request);
+			if (requestResolution == null) {
+				writeResponse(out, onNotFound == null ? Responses.NOT_FOUND : onNotFound);
 				return;
 			}
-			ControllerMethod method = resolvedRequest.getMethod();
-			PathVariables pathVariables = resolvedRequest.getPathVariables();
+			ControllerMethod method = requestResolution.getMethod();
+			PathVariables pathVariables = requestResolution.getPathVariables();
 			writeResponse(out, method.process(request, pathVariables));
 		} catch (BadRequestException e) {
-			writeResponse(out, Responses.BAD_REQUEST);
+			writeResponse(out, onBadRequest == null ? Responses.BAD_REQUEST : onBadRequest);
 		}
 	}
 
@@ -194,5 +209,4 @@ class HttpRequestHandler implements Runnable {
 		}
 		return sb.toString();
 	}
-
 }
