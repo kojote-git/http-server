@@ -10,7 +10,6 @@ import com.jkojote.server.QueryString;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 class HttpRequestImpl implements HttpRequest {
 	private String requestLine;
