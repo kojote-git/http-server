@@ -8,7 +8,7 @@ import com.jkojote.server.HttpRequestBody;
 import com.jkojote.server.HttpStatus;
 import com.jkojote.server.PathVariables;
 import com.jkojote.server.QueryString;
-import com.jkojote.server.RequestResolver;
+import com.jkojote.server.ServerConfiguration;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.bodies.StreamRequestBody;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.jkojote.server.RequestResolver.RequestResolution;
+import static com.jkojote.server.ServerConfiguration.RequestResolution;
 
 class HttpRequestHandler implements Runnable {
 	static final Pattern METHOD_PATTERN = Pattern.compile(
@@ -39,13 +39,13 @@ class HttpRequestHandler implements Runnable {
 	private static final int WRITE_BUFFER_SIZE = 4096;
 
 	private Socket socket;
-	private RequestResolver resolver;
+	private ServerConfiguration configuration;
 	private HttpResponse onNotFound;
 	private HttpResponse onBadRequest;
 
-	HttpRequestHandler(Socket socket, RequestResolver resolver) {
+	HttpRequestHandler(Socket socket, ServerConfiguration configuration) {
 		this.socket = socket;
-		this.resolver = resolver;
+		this.configuration = configuration;
 	}
 
 	@Override
@@ -58,30 +58,25 @@ class HttpRequestHandler implements Runnable {
 		}
 	}
 
-	// temporal
-	void setOnBadRequest(HttpResponse onBadRequest) {
-		this.onBadRequest = onBadRequest;
-	}
-
-	// temporal
-	void setOnNotFound(HttpResponse onNotFound) {
-		this.onNotFound = onNotFound;
-	}
-
-	// TODO possible NPE
 	private void handleRequest(InputStream in, OutputStream out) throws IOException {
 		try {
 			HttpRequest request = readRequest(in);
-			RequestResolution requestResolution = resolver.resolveRequest(request);
+			RequestResolution requestResolution = configuration.resolveRequest(request);
 			if (requestResolution == null) {
-				writeResponse(out, onNotFound == null ? Responses.NOT_FOUND : onNotFound);
+				HttpResponse notFound = configuration.getResponseOnError(HttpStatus.NOT_FOUND,
+					request.getPath()
+				);
+				writeResponse(out, notFound == null ? Responses.NOT_FOUND : notFound);
 				return;
 			}
 			ControllerMethod method = requestResolution.getMethod();
 			PathVariables pathVariables = requestResolution.getPathVariables();
 			writeResponse(out, method.process(request, pathVariables));
 		} catch (BadRequestException e) {
-			writeResponse(out, onBadRequest == null ? Responses.BAD_REQUEST : onBadRequest);
+			HttpResponse badRequest = configuration.getResponseOnError(HttpStatus.BAD_REQUEST,
+				e.getMessage()
+			);
+			writeResponse(out, badRequest == null ? Responses.BAD_REQUEST : badRequest);
 		}
 	}
 
@@ -150,7 +145,7 @@ class HttpRequestHandler implements Runnable {
 		try {
 			return header == null ? 0 : Long.parseLong(header);
 		} catch (NumberFormatException e) {
-			throw new BadRequestException();
+			throw new BadRequestException("Illegal value for \"Content-Length\" header: " + header);
 		}
 	}
 
@@ -201,7 +196,7 @@ class HttpRequestHandler implements Runnable {
 		while ((c = in.read()) > 0) {
 			if (c == '\r') {
 				if (in.read() != '\n') {
-					throw new BadRequestException();
+					throw new BadRequestException("Illegal line separator. Expected CRLF");
 				}
 				return sb.toString();
 			}

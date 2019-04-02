@@ -3,11 +3,10 @@ package com.jkojote.server.impl;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.HttpStatus;
-import com.jkojote.server.RequestResolver;
+import com.jkojote.server.ServerConfiguration;
 import com.jkojote.server.bodies.ByteResponseBody;
 import com.jkojote.server.utils.IOUtils;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -33,7 +32,7 @@ public class HttpRequestHandlerTest {
 			.setResponseBody(new ByteResponseBody("hello".getBytes()))
 			.build();
 
-		RequestResolver resolver = new MockRequestResolver((httpRequest, pathVariables) -> {
+		ServerConfiguration resolver = new MockRequestResolver((httpRequest, pathVariables) -> {
 			assertEquals("GET / HTTP/1.1", httpRequest.getRequestLine());
 			assertEquals(HttpMethod.GET, httpRequest.getMethod());
 			return response;
@@ -48,9 +47,8 @@ public class HttpRequestHandlerTest {
 	public void handleRequest_case2() throws IOException {
 		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
 		Socket socket = mockSocketWithRequest("request_case2", responseStream);
-		RequestResolver resolver = new MockRequestResolver((req, vars) -> null);
+		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> null);
 		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
-		handler.setOnBadRequest(Responses.BAD_REQUEST);
 		handler.run();
 		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.BAD_REQUEST);
 	}
@@ -59,9 +57,8 @@ public class HttpRequestHandlerTest {
 	public void handleRequest_case3() throws IOException {
 		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
 		Socket socket = mockSocketWithRequest("request_case3", responseStream);
-		RequestResolver resolver = new MockRequestResolver(null);
+		ServerConfiguration resolver = new MockRequestResolver(null);
 		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
-		handler.setOnNotFound(Responses.NOT_FOUND);
 		handler.run();
 		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.NOT_FOUND);
 	}

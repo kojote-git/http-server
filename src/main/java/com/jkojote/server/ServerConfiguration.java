@@ -1,8 +1,10 @@
 package com.jkojote.server;
 
-public interface RequestResolver {
+public interface ServerConfiguration {
 
 	RequestResolution resolveRequest(HttpRequest request);
+
+	HttpResponse getResponseOnError(HttpStatus status, String errorMessage);
 
 	interface RequestResolution {
 

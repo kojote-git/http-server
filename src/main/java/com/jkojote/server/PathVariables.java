@@ -2,9 +2,9 @@ package com.jkojote.server;
 
 public interface PathVariables {
 
-	String getTemplateVariable(String name);
+	String getPathVariable(String name);
 
-	Iterable<PathVariable> getTemplateVariables();
+	Iterable<PathVariable> getPathVariable();
 
 	interface PathVariable {
 
