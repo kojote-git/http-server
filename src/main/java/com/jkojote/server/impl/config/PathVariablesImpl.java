@@ -26,6 +26,11 @@ class PathVariablesImpl implements PathVariables {
 				.collect(Collectors.toCollection(LinkedHashSet::new));
 	}
 
+	@Override
+	public int size() {
+		return pathVariables.size();
+	}
+
 	void addPathVariable(String name, String value) {
 		pathVariables.put(name, value);
 	}

@@ -69,6 +69,7 @@ class HttpRequestHandler implements Runnable {
 				writeResponse(out, notFound == null ? Responses.NOT_FOUND : notFound);
 				return;
 			}
+			// TODO check NPE
 			ControllerMethod method = requestResolution.getMethod();
 			PathVariables pathVariables = requestResolution.getPathVariables();
 			writeResponse(out, method.process(request, pathVariables));

@@ -6,6 +6,8 @@ public interface PathVariables {
 
 	Iterable<PathVariable> getPathVariable();
 
+	int size();
+
 	interface PathVariable {
 
 		String getName();

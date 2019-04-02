@@ -11,8 +11,10 @@ import java.util.regex.Pattern;
 
 class PathNode {
 	private static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("\\{.*?\\}");
+	private static Pattern CURLY_BRACES = Pattern.compile("\\{|\\}");
 
 	private String value;
+	private String pathVariableName;
 	private HashMap<HttpMethod, ControllerMethod> controllers;
 	private boolean pathVariable;
 	private List<PathNode> children;
@@ -24,6 +26,9 @@ class PathNode {
 		this.pathVariable = PATH_VARIABLE_PATTERN.matcher(value).matches();
 		this.children = new LinkedList<>();
 		this.readonlyChildren = Collections.unmodifiableList(this.children);
+		if (pathVariable) {
+			pathVariableName = CURLY_BRACES.matcher(value).replaceAll("");
+		}
 	}
 
 	boolean isPathVariable() {
@@ -32,6 +37,10 @@ class PathNode {
 
 	String getValue() {
 		return value;
+	}
+
+	String getPathVariableName() {
+		return pathVariableName;
 	}
 
 	ControllerMethod getControllerMethod(HttpMethod method) {
