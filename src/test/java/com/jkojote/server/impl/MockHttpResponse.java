@@ -23,7 +23,7 @@ class MockHttpResponse implements HttpResponse {
 	static final Pattern STATUS_LINE_PATTERN =
 			Pattern.compile("^HTTP/[0-9]\\.[0-9] [0-9]{3} [a-zA-Z\\s]+$");
 	static final Pattern HEADER_PATTERN =
-			Pattern.compile("^[a-zA-Z\\-]+:[\\sa-z-A-Z0-9/=;]*$");
+			Pattern.compile("^[a-zA-Z\\-]+:([\\sa-z-A-Z0-9/=;]|(\".*?\"))*$");
 
 	private HttpStatus status;
 	private Iterable<HttpHeader> headers;

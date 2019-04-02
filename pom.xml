@@ -17,7 +17,6 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -29,6 +28,11 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/java/resources</directory>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -3,6 +3,16 @@ package com.jkojote.server;
 import static com.jkojote.server.utils.Preconditions.checkNotNull;
 
 public final class HttpStatus {
+	public static final HttpStatus OK = HttpStatus.of(200, "OK");
+	public static final HttpStatus CREATED = HttpStatus.of(201, "Created");
+	public static final HttpStatus ACCEPTED = HttpStatus.of(202, "Accepted");
+	public static final HttpStatus NO_CONTENT = HttpStatus.of(204, "No Content");
+
+	public static final HttpStatus BAD_REQUEST = HttpStatus.of(400, "Bad Request");
+	public static final HttpStatus UNAUTHORIZED = HttpStatus.of(401, "Unauthorized");
+	public static final HttpStatus NOT_FOUND = HttpStatus.of(404, "Not Found");
+	public static final HttpStatus FORBIDDEN = HttpStatus.of(403, "Forbidden");
+
 	private final int code;
 	private final String reasonPhrase;
 

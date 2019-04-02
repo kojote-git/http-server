@@ -36,7 +36,7 @@ class HttpRequestHandler implements Runnable {
 	private static final byte[] HTTP_VERSION = "HTTP/1.1".getBytes();
 	private static final byte[] SPACE = " ".getBytes();
 	private static final byte[] COLON = ":".getBytes();
-	private static int WRITE_BUFFER_SIZE = 4096;
+	private static final int WRITE_BUFFER_SIZE = 4096;
 
 	private Socket socket;
 	private RequestResolver resolver;
@@ -112,6 +112,16 @@ class HttpRequestHandler implements Runnable {
 		return new RequestLine(Enum.valueOf(HttpMethod.class, method), uri);
 	}
 
+	private static class RequestLine {
+		private HttpMethod method;
+		private String path;
+
+		RequestLine(HttpMethod method, String url) {
+			this.method = method;
+			this.path = url;
+		}
+	}
+
 	private Map<HeaderName, String> readHeaders(InputStream in) throws IOException {
 		Map<HeaderName, String> headers = new HashMap<>();
 		String line = readLine(in);
@@ -146,16 +156,6 @@ class HttpRequestHandler implements Runnable {
 
 	private HttpRequestBody getRequestBody(long contentLength, InputStream in) {
 		return new StreamRequestBody(contentLength, in);
-	}
-
-	private class RequestLine {
-		private HttpMethod method;
-		private String path;
-
-		RequestLine(HttpMethod method, String url) {
-			this.method = method;
-			this.path = url;
-		}
 	}
 
 	private void writeResponse(OutputStream out, HttpResponse response) throws IOException {
