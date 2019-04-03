@@ -1,6 +1,7 @@
 package com.jkojote.server.impl;
 
 import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.ErrorProperties;
 import com.jkojote.server.HeaderName;
 import com.jkojote.server.HttpHeader;
 import com.jkojote.server.HttpMethod;
@@ -18,19 +19,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.jkojote.server.ServerConfiguration.RequestResolution;
+import static com.jkojote.server.ServerConfiguration.ErrorData;
 
 class HttpRequestHandler implements Runnable {
 	static final Pattern METHOD_PATTERN = Pattern.compile(
 		"GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD"
-	);
-	static final Pattern URL_PATTERN = Pattern.compile(
-		"(/[a-zA-Z0-9%_]*)+(\\?([a-zA-Z0-9%_]*(=[a-zA-Z0-9%_]*)?&?)*)?"
 	);
 	private static final byte[] CRLF = "\r\n".getBytes();
 	private static final byte[] HTTP_VERSION = "HTTP/1.1".getBytes();
@@ -40,8 +41,6 @@ class HttpRequestHandler implements Runnable {
 
 	private Socket socket;
 	private ServerConfiguration configuration;
-	private HttpResponse onNotFound;
-	private HttpResponse onBadRequest;
 
 	HttpRequestHandler(Socket socket, ServerConfiguration configuration) {
 		this.socket = socket;
@@ -63,21 +62,39 @@ class HttpRequestHandler implements Runnable {
 			HttpRequest request = readRequest(in);
 			RequestResolution requestResolution = configuration.resolveRequest(request);
 			if (requestResolution == null) {
-				HttpResponse notFound = configuration.getResponseOnError(HttpStatus.NOT_FOUND,
-					request.getPath()
+				ErrorDataImpl errorData = new ErrorDataImpl()
+					.setMessage("cannot find appropriate controller")
+					.putStatus(HttpStatus.NOT_FOUND)
+					.putRequest(request)
+					.putProperty(ErrorProperties.PATH, request.getPath());
+				HttpResponse notFound = configuration.getResponseOnError(
+					HttpStatus.NOT_FOUND, errorData
 				);
 				writeResponse(out, notFound == null ? Responses.NOT_FOUND : notFound);
 				return;
 			}
-			// TODO check NPE
 			ControllerMethod method = requestResolution.getMethod();
 			PathVariables pathVariables = requestResolution.getPathVariables();
 			writeResponse(out, method.process(request, pathVariables));
 		} catch (BadRequestException e) {
-			HttpResponse badRequest = configuration.getResponseOnError(HttpStatus.BAD_REQUEST,
-				e.getMessage()
+			ErrorDataImpl errorData = new ErrorDataImpl()
+				.setMessage("bad request")
+				.putStatus(HttpStatus.BAD_REQUEST)
+				.putException(e);
+			HttpResponse badRequest = configuration.getResponseOnError(
+				HttpStatus.BAD_REQUEST, errorData
 			);
 			writeResponse(out, badRequest == null ? Responses.BAD_REQUEST : badRequest);
+		} catch (RuntimeException e) {
+			// TODO log exception
+			ErrorDataImpl errorData = new ErrorDataImpl()
+				.setMessage("internal error")
+				.putStatus(HttpStatus.INTERNAL_ERROR)
+				.putException(e);
+			HttpResponse internalError = configuration.getResponseOnError(
+				HttpStatus.INTERNAL_ERROR, errorData
+			);
+			writeResponse(out, internalError == null ? Responses.INTERNAL_ERROR : internalError);
 		}
 	}
 
@@ -94,18 +111,31 @@ class HttpRequestHandler implements Runnable {
 		);
 	}
 
+	// TODO check malformed request lines
 	private RequestLine parseRequestLine(String requestLine) {
 		Matcher methodMatcher = METHOD_PATTERN.matcher(requestLine);
-		Matcher uriMatcher = URL_PATTERN.matcher(requestLine);
 		if (!methodMatcher.find()) {
-			throw new BadRequestException();
-		}
-		if (!uriMatcher.find()) {
-			throw new BadRequestException();
+			throw new BadRequestException("unsupported method");
 		}
 		String method = methodMatcher.group();
-		String uri = uriMatcher.group();
+		String uri = getUri(requestLine);
 		return new RequestLine(Enum.valueOf(HttpMethod.class, method), uri);
+	}
+
+	private String getUri(String requestLine) {
+		int begin = requestLine.indexOf(" ");
+		int end = requestLine.lastIndexOf(" ");
+		if (begin == -1 || begin == end) {
+			throw new BadRequestException("resource is not specified");
+
+		}
+		String uri = requestLine.substring(begin + 1, end);
+		try {
+			new URI(uri);
+		} catch (URISyntaxException e) {
+			throw new BadRequestException("malformed uri");
+		}
+		return uri;
 	}
 
 	private static class RequestLine {
@@ -204,5 +234,55 @@ class HttpRequestHandler implements Runnable {
 			sb.append((char) c);
 		}
 		return sb.toString();
+	}
+
+	private static class ErrorDataImpl implements ErrorData  {
+		private String message;
+		private Map<String, Object> properties;
+
+		private ErrorDataImpl() {
+			properties = new HashMap<>();
+			message = "";
+		}
+
+		@Override
+		public String getMessage() {
+			return message;
+		}
+
+		@Override
+		public Object getProperty(String name) {
+			return properties.get(name);
+		}
+
+		ErrorDataImpl setMessage(String message) {
+			this.message = message;
+			return this;
+		}
+
+		ErrorDataImpl putProperty(String name, Object obj) {
+			properties.put(name, obj);
+			return this;
+		}
+
+		ErrorDataImpl putStatus(HttpStatus status) {
+			properties.put(ErrorProperties.STATUS, status);
+			return this;
+		}
+
+		ErrorDataImpl putRequest(HttpRequest request) {
+			properties.put(ErrorProperties.REQUEST, request);
+			return this;
+		}
+
+		ErrorDataImpl putException(Exception e) {
+			properties.put(ErrorProperties.EXCEPTION, e);
+			return this;
+		}
+
+		@Override
+		public boolean hasProperty(String name) {
+			return properties.containsKey(name);
+		}
 	}
 }

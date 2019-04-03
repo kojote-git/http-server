@@ -4,7 +4,7 @@ public interface ServerConfiguration {
 
 	RequestResolution resolveRequest(HttpRequest request);
 
-	HttpResponse getResponseOnError(HttpStatus status, String errorMessage);
+	HttpResponse getResponseOnError(HttpStatus status, ErrorData errorData);
 
 	interface RequestResolution {
 
@@ -13,4 +13,12 @@ public interface ServerConfiguration {
 		PathVariables getPathVariables();
 	}
 
+	interface ErrorData {
+
+		String getMessage();
+
+		Object getProperty(String name);
+
+		boolean hasProperty(String name);
+	}
 }

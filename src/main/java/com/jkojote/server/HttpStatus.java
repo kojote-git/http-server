@@ -13,6 +13,8 @@ public final class HttpStatus {
 	public static final HttpStatus NOT_FOUND = HttpStatus.of(404, "Not Found");
 	public static final HttpStatus FORBIDDEN = HttpStatus.of(403, "Forbidden");
 
+	public static final HttpStatus INTERNAL_ERROR = HttpStatus.of(500, "Internal Server Error");
+
 	private final int code;
 	private final String reasonPhrase;
 

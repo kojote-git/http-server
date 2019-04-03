@@ -32,6 +32,21 @@ public class HttpResponseBuilder {
 		return this;
 	}
 
+	public HttpResponseBuilder addHeader(String name, Object value) {
+		headers.add(HttpHeader.of(name, value.toString()));
+		return this;
+	}
+
+	public HttpResponseBuilder addHeader(String name, long value) {
+		headers.add(HttpHeader.of(name, String.valueOf(value)));
+		return this;
+	}
+
+	public HttpResponseBuilder addHeader(String name, double value) {
+		headers.add(HttpHeader.of(name, String.valueOf(value)));
+		return this;
+	}
+
 	public HttpResponseBuilder setStatus(HttpStatus status) {
 		this.status = status;
 		return this;

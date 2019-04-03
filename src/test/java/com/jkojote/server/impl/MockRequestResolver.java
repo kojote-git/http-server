@@ -25,7 +25,7 @@ class MockRequestResolver implements ServerConfiguration {
 	}
 
 	@Override
-	public HttpResponse getResponseOnError(HttpStatus status, String message) {
+	public HttpResponse getResponseOnError(HttpStatus status, ErrorData data) {
 		return null;
 	}
 

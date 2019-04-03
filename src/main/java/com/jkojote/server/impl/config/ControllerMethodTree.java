@@ -34,6 +34,11 @@ class ControllerMethodTree {
 			PathNode variableNode = findPathVariableNode(currentNode);
 			PathNode pathNode = findNodeForPath(currentNode, path);
 			if (variableNode != null && isPathVariable(path)) {
+				if (!path.equals(variableNode.getValue())) {
+					throw new IllegalStateException(
+						"cannot have two different path variables at the same level"
+					);
+				}
 				currentNode = variableNode;
 				continue;
 			}
@@ -68,7 +73,7 @@ class ControllerMethodTree {
 		return PATH_VARIABLE_PATTERN.matcher(value).matches();
 	}
 
-	RequestResolution resolveControllerMethod(HttpRequest request) {
+	RequestResolution resolveRequest(HttpRequest request) {
 		String[] paths = request.getPath().split("/");
 		if (isRequestForRoot(request)) {
 			return returnRoot(request);
