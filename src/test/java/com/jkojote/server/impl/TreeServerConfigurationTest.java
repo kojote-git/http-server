@@ -5,7 +5,8 @@ import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.HttpStatus;
 import com.jkojote.server.bodies.ByteResponseBody;
-import com.jkojote.server.impl.config.ServerConfigurationImpl;
+import com.jkojote.server.impl.config.EchoController;
+import com.jkojote.server.impl.config.TreeServerConfiguration;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,12 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ServerConfigurationImplTest {
-	private ServerConfigurationImpl config;
+public class TreeServerConfigurationTest {
+	private TreeServerConfiguration config;
 
 	@Before
 	public void init() {
-		config = new ServerConfigurationImpl();
+		config = new TreeServerConfiguration();
 		config
 			.addControllerMethod("/hello/{echo}", HttpMethod.GET, (req, vars) -> {
 				String echo = vars.getPathVariable("echo");
@@ -36,6 +37,7 @@ public class ServerConfigurationImplTest {
 				String message = vars.getPathVariable("message");
 				return stringResponse(HttpStatus.OK, name + "/" + message);
 			})
+			.addController(new EchoController())
 			.addResponseOnError(HttpStatus.NOT_FOUND, (error) -> {
 				String path = error.getProperty(ErrorProperties.PATH).toString();
 				String response = "cannot find: " + path;
@@ -62,6 +64,42 @@ public class ServerConfigurationImplTest {
 		HttpRequestHandler handler = new HttpRequestHandler(socket, config);
 		handler.run();
 		HttpResponse expectedResponse = stringResponse(HttpStatus.OK, "echo/echo");
+		HttpResponse actualResponse = new MockHttpResponse(out.toByteArray());
+
+		assertEquals(actualResponse, expectedResponse);
+	}
+
+	@Test
+	public void testEchoController_echo() throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Socket socket = mockSocket("GET /echo HTTP/1.1\r\n", out);
+		HttpRequestHandler handler = new HttpRequestHandler(socket, config);
+		handler.run();
+		HttpResponse expectedResponse = stringResponse(HttpStatus.OK, "echo");
+		HttpResponse actualResponse = new MockHttpResponse(out.toByteArray());
+
+		assertEquals(actualResponse, expectedResponse);
+	}
+
+	@Test
+	public void testEchoController_echo_message() throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Socket socket = mockSocket("GET /echo/hello HTTP/1.1\r\n", out);
+		HttpRequestHandler handler = new HttpRequestHandler(socket, config);
+		handler.run();
+		HttpResponse expectedResponse = stringResponse(HttpStatus.OK, "hello");
+		HttpResponse actualResponse = new MockHttpResponse(out.toByteArray());
+
+		assertEquals(actualResponse, expectedResponse);
+	}
+
+	@Test
+	public void testEchoController_echo_message_n() throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		Socket socket = mockSocket("GET /echo/hello/3 HTTP/1.1\r\n", out);
+		HttpRequestHandler handler = new HttpRequestHandler(socket, config);
+		handler.run();
+		HttpResponse expectedResponse = stringResponse(HttpStatus.OK, "hellohellohello");
 		HttpResponse actualResponse = new MockHttpResponse(out.toByteArray());
 
 		assertEquals(actualResponse, expectedResponse);
