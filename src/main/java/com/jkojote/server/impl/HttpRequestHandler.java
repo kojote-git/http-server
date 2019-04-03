@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -98,6 +99,7 @@ class HttpRequestHandler implements Runnable {
 			HttpResponse internalError = configuration.getResponseOnError(
 				HttpStatus.INTERNAL_ERROR, errorData
 			);
+			e.printStackTrace();
 			writeResponse(out, internalError == null ? Responses.INTERNAL_ERROR : internalError);
 		}
 	}
