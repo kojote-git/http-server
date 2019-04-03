@@ -33,6 +33,10 @@ class HttpRequestHandler implements Runnable {
 	static final Pattern METHOD_PATTERN = Pattern.compile(
 		"GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD"
 	);
+	// check general format for request line without validating URI
+	static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(
+		"^(" + METHOD_PATTERN + ") " + "\\S+ HTTP/\\d\\.\\d$"
+	);
 	private static final byte[] CRLF = "\r\n".getBytes();
 	private static final byte[] HTTP_VERSION = "HTTP/1.1".getBytes();
 	private static final byte[] SPACE = " ".getBytes();
@@ -111,8 +115,10 @@ class HttpRequestHandler implements Runnable {
 		);
 	}
 
-	// TODO check malformed request lines
 	private RequestLine parseRequestLine(String requestLine) {
+		if (!REQUEST_LINE_PATTERN.matcher(requestLine).matches()) {
+			throw new BadRequestException("malformed request line");
+		}
 		Matcher methodMatcher = METHOD_PATTERN.matcher(requestLine);
 		if (!methodMatcher.find()) {
 			throw new BadRequestException("unsupported method");

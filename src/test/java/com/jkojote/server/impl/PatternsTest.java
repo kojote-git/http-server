@@ -24,6 +24,22 @@ public class PatternsTest {
 		find("DELETE", delete, methodPattern);
 	}
 
+	@Test
+	public void requestLinePattern_testRequestLinePattern() {
+		Pattern pattern = HttpRequestHandler.REQUEST_LINE_PATTERN;
+		assertMatches("GET / HTTP/1.1", pattern);
+		assertMatches("POST /a HTTP/1.1", pattern);
+		assertMatches("POST /a.b.c/a_b.$=+?ab=1 HTTP/1.1", pattern);
+		assertMatches("POST /a HTTP/2.0", pattern);
+
+		assertNotMatches("", pattern);
+		assertNotMatches("METHOD / HTTP/1.1", pattern);
+		assertNotMatches("GET / HTTP", pattern);
+		assertNotMatches("POST / HTTP/", pattern);
+		assertNotMatches("GET HTTP", pattern);
+		assertNotMatches("GET HTTP/1.1", pattern);
+	}
+
 	private void find(String expected, String requestLine, Pattern pattern) {
 		Matcher matcher = pattern.matcher(requestLine);
 		assertTrue(matcher.find());
