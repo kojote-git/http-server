@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -131,8 +130,8 @@ class HttpRequestHandler implements Runnable {
 	}
 
 	private String getUri(String requestLine) {
-		int begin = requestLine.indexOf(" ");
-		int end = requestLine.lastIndexOf(" ");
+		int begin = requestLine.indexOf(' ');
+		int end = requestLine.lastIndexOf(' ');
 		if (begin == -1 || begin == end) {
 			throw new BadRequestException("resource is not specified");
 

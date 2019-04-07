@@ -25,94 +25,26 @@ class ControllerMethodTree {
 	void addControllerMethod(String pathTemplate,
 							 HttpMethod httpMethod,
 							 ControllerMethod controllerMethod) {
-		String[] paths = pathTemplate.split("/");
+		String[] nodes = pathTemplate.split("/");
 		PathNode currentNode = root;
-		for (String path : paths) {
-			if (path.isEmpty()) {
+		for (String nodeValue : nodes) {
+			if (nodeValue.isEmpty()) {
 				continue;
 			}
-			PathNode variableNode = findPathVariableNode(currentNode);
-			PathNode pathNode = findNodeForPath(currentNode, path);
-			if (variableNode != null && isPathVariable(path)) {
-				if (!path.equals(variableNode.getValue())) {
+			PathNode nextNode = findAnyNode(currentNode, nodeValue);
+			if (nextNode != null && isPathVariable(nodeValue)) {
+				if (!nodeValue.equals(nextNode.getValue())) {
 					throw new IllegalStateException(
 						"cannot have two different path variables at the same level"
 					);
 				}
-				currentNode = variableNode;
-				continue;
+			} else if (nextNode == null || nextNode.isPathVariable()) {
+				nextNode = new PathNode(nodeValue);
+				currentNode.addChild(nextNode);
 			}
-			if (pathNode == null) {
-				pathNode = new PathNode(path);
-				currentNode.addChild(pathNode);
-			}
-			currentNode = pathNode;
+			currentNode = nextNode;
 		}
 		currentNode.putControllerMethod(httpMethod, controllerMethod);
-	}
-
-	private PathNode findNodeForPath(PathNode parent, String path) {
-		for (PathNode child : parent.getChildren()) {
-			if (child.getValue().equals(path)) {
-				return child;
-			}
-		}
-		return null;
-	}
-
-	private PathNode findPathVariableNode(PathNode parent) {
-		for (PathNode child : parent.getChildren()) {
-			if (child.isPathVariable()) {
-				return child;
-			}
-		}
-		return null;
-	}
-
-	private boolean isPathVariable(String value) {
-		return PATH_VARIABLE_PATTERN.matcher(value).matches();
-	}
-
-	RequestResolution resolveRequest(HttpRequest request) {
-		String[] paths = request.getPath().split("/");
-		if (isRequestForRoot(request)) {
-			return returnRoot(request);
-		}
-		PathNode currentNode = root;
-		PathVariablesImpl pathVariables = new PathVariablesImpl();
-		for (String path: paths) {
-			path = path.trim();
-			if (path.isEmpty()) {
-				continue;
-			}
-			PathNode variableNode = null;
-			boolean exactNodeFound = false;
-			for (PathNode child : currentNode.getChildren()) {
-				if (child.getValue().equals(path)) {
-					currentNode = child;
-					exactNodeFound = true;
-					break;
-				} else if (child.isPathVariable()) {
-					variableNode = child;
-				}
-			}
-			if (!exactNodeFound) {
-				if (variableNode == null) {
-					return null;
-				}
-				currentNode = variableNode;
-				pathVariables.addPathVariable(
-					variableNode.getPathVariableName(), path
-				);
-			}
-		}
-		if (!currentNode.hasMethod(request.getMethod())) {
-			return null;
-		}
-		return new RequestResolutionImpl(
-			currentNode.getControllerMethod(request.getMethod()),
-			pathVariables
-		);
 	}
 
 	private boolean isRequestForRoot(HttpRequest request) {
@@ -125,6 +57,71 @@ class ControllerMethodTree {
 			return null;
 		}
 		return new RequestResolutionImpl(method, new PathVariablesImpl());
+	}
+
+	RequestResolution resolveRequest(HttpRequest request) {
+		// split path such as /a/b/c into [a, b, c]
+		// cannot figure out the name for the a, b and c itself
+		// so each of them is called a node simply
+		String[] nodes = request.getPath().split("/");
+		if (isRequestForRoot(request)) {
+			return returnRoot(request);
+		}
+		return resolveRequest(request, nodes);
+	}
+
+	/**
+	 * Traverse the tree until it finds the appropriate controller method
+	 * and return null if there is no appropriate controller method
+	 */
+	private RequestResolution resolveRequest(HttpRequest request, String[] nodes) {
+		PathNode currentNode = root;
+		PathVariablesImpl pathVariables = new PathVariablesImpl();
+		for (String nodeValue: nodes) {
+			nodeValue = nodeValue.trim();
+			if (nodeValue.isEmpty()) {
+				continue;
+			}
+			currentNode = findAnyNode(currentNode, nodeValue);
+			if (currentNode == null) {
+				return null;
+			}
+			if (currentNode.isPathVariable()) {
+				pathVariables.addPathVariable(
+					currentNode.getPathVariableName(), nodeValue
+				);
+			}
+		}
+		if (!currentNode.hasMethod(request.getMethod())) {
+			return null;
+		}
+		return new RequestResolutionImpl(
+			currentNode.getControllerMethod(request.getMethod()),
+			pathVariables
+		);
+	}
+
+	private boolean isPathVariable(String value) {
+		return PATH_VARIABLE_PATTERN.matcher(value).matches();
+	}
+
+	/**
+	 * return child node of the parent that has the value the same as nodeValue;
+	 * otherwise search for path variable and return it
+	 * otherwise return null
+	 */
+	private PathNode findAnyNode(PathNode parent, String nodeValue) {
+		PathNode res = null;
+		PathNode variableNode = null;
+		for (PathNode child : parent.getChildren()) {
+			if (child.getValue().equals(nodeValue)) {
+				res = child;
+				break;
+			} else if (child.isPathVariable()) {
+				variableNode = child;
+			}
+		}
+		return res == null ? variableNode : res;
 	}
 
 	private static class RequestResolutionImpl implements RequestResolution {

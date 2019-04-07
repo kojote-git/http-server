@@ -4,9 +4,11 @@ import com.jkojote.server.ControllerMethod;
 import com.jkojote.server.HttpMethod;
 
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 class PathNode {
@@ -15,14 +17,14 @@ class PathNode {
 
 	private String value;
 	private String pathVariableName;
-	private HashMap<HttpMethod, ControllerMethod> controllers;
+	private Map<HttpMethod, ControllerMethod> controllers;
 	private boolean pathVariable;
 	private List<PathNode> children;
 	private List<PathNode> readonlyChildren;
 
 	PathNode(String value) {
 		this.value = value;
-		this.controllers = new HashMap<>();
+		this.controllers = new EnumMap<>(HttpMethod.class);
 		this.pathVariable = PATH_VARIABLE_PATTERN.matcher(value).matches();
 		this.children = new LinkedList<>();
 		this.readonlyChildren = Collections.unmodifiableList(this.children);
