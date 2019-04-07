@@ -5,6 +5,8 @@ simple http server
 In general, it is a small library that provides basic means to write http servers and web services though it's seems more 
 like an experimental project for learning purposes. I tried to keep it simple but convenient and capable enough.
 
+It's currently being developed so there might be bugs that I'm not aware of.
+
 ### Example
 Let's write a simple server that consists of one controller - `EchoController`. This controller responds us with a similar message 
 we pass to it:
