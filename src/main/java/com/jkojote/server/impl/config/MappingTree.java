@@ -10,6 +10,13 @@ import java.util.regex.Pattern;
 
 import static com.jkojote.server.ServerConfiguration.RequestResolution;
 
+/**
+ * Mapping tree is a special data structure, that contains
+ * mappings for controller methods. <br/>
+ *
+ * Each node of this tree is represented by {@link PathNode}.
+ * @see PathNode
+ */
 class MappingTree {
 	private static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("\\{.*?\\}");
 
@@ -139,9 +146,9 @@ class MappingTree {
 		return resolveRequest(request, nodes);
 	}
 
-	/**
-	 * Traverse the tree until it finds the appropriate controller method
-	 * and return null if there is no appropriate controller method
+	/*
+	 * Traverse the tree until it finds the necessary controller method to process
+	 * given request or return null if there is no such controller method
 	 */
 	private RequestResolution resolveRequest(HttpRequest request, String[] nodes) {
 		PathNode currentNode = root;

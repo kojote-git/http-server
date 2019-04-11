@@ -1,7 +1,7 @@
 package com.jkojote.server;
 
 /**
- * An object that can handle one http request at instant
+ * An object that processes http requests
  */
 public interface ControllerMethod {
 

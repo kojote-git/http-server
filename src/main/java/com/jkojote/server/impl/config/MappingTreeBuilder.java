@@ -79,7 +79,7 @@ public class MappingTreeBuilder {
 	private MappingTree buildTree(Object controller, String basePath, List<Method> methods) {
 		MappingTree tree = new MappingTree();
 		for (Method method : methods) {
-			Mapping mapping = getMapping(method);
+			Mapping mapping = getFirstMapping(method);
 			checkPathTemplate(mapping.path);
 			String resolvedPathTemplate = resolvePathTemplate(basePath, mapping.path);
 			ControllerMethod controllerMethod = new AnnotatedControllerMethod(controller, method);
@@ -88,23 +88,36 @@ public class MappingTreeBuilder {
 		return tree;
 	}
 
-	private Mapping getMapping(Method method) {
+	private Mapping getFirstMapping(Method method) {
 		Annotation[] annotations = method.getDeclaredAnnotations();
 		RequestMapping requestMapping = findAnnotation(RequestMapping.class, annotations);
 		if (requestMapping == null) {
-			Annotation mapping = findAnyAnnotation(methodAnnotations, annotations);
-			try {
-				Class<? extends Annotation> clazz = mapping.annotationType();
-				Method value = clazz.getMethod("value");
-				String pathTemplate = (String) value.invoke(mapping);
-				HttpMethod httpMethod = annotationMethodMap.get(clazz);
-				return new Mapping(pathTemplate.trim(), httpMethod);
-			} catch (NoSuchMethodException | IllegalAccessException |
-					InvocationTargetException cannotHappen) {
-				return null;
-			}
+			return getFirstMapping(annotations);
 		} else {
 			return new Mapping(requestMapping.value(), requestMapping.method());
+		}
+	}
+
+	/*
+	 * find first declared mapping annotation (GetMapping, PostMapping etc.)
+	 * and return it's mapping
+	 */
+	private Mapping getFirstMapping(Annotation[] annotations) {
+		Annotation mapping = findAnyAnnotation(methodAnnotations, annotations);
+		// cannot happen because methods
+		// are scanned for mapping annotations beforehand
+		if (mapping == null) {
+			throw new NullPointerException();
+		}
+		try {
+			Class<? extends Annotation> clazz = mapping.annotationType();
+			Method value = clazz.getMethod("value");
+			String pathTemplate = (String) value.invoke(mapping);
+			HttpMethod httpMethod = annotationMethodMap.get(clazz);
+			return new Mapping(pathTemplate.trim(), httpMethod);
+		} catch (NoSuchMethodException | IllegalAccessException |
+				InvocationTargetException cannotHappen) {
+			throw new RuntimeException(cannotHappen);
 		}
 	}
 
@@ -143,6 +156,7 @@ public class MappingTreeBuilder {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T extends Annotation> T findAnnotation(Class<T> clazz, Annotation[] annotations) {
 		for (Annotation a : annotations) {
 			if (a.annotationType() == clazz) {
@@ -172,7 +186,7 @@ public class MappingTreeBuilder {
 	private void checkNotStatic(Method method) {
 		if (Modifier.isStatic(method.getModifiers())) {
 			throw new InvalidControllerMethodException(
-				"Method cannot be static",
+				"method cannot be static",
 				method
 			);
 		}
@@ -181,7 +195,7 @@ public class MappingTreeBuilder {
 	private void checkAccess(Method method) {
 		if (!Modifier.isPublic(method.getModifiers())) {
 			throw new InvalidControllerMethodException(
-				"Method must be public",
+				"method must be public",
 				method
 			);
 		}
@@ -189,18 +203,18 @@ public class MappingTreeBuilder {
 
 	private void checkParameters(Method method) {
 		if (method.getParameters().length != 2) {
-			throw new InvalidControllerMethodException("Illegal number of parameters", method);
+			throw new InvalidControllerMethodException("illegal number of parameters", method);
 		}
 		Class<?>[] parameterTypes = method.getParameterTypes();
 		if (parameterTypes[0] != HttpRequest.class) {
 			throw new InvalidControllerMethodException(
-				"First parameter mus be of type HttpRequest",
+				"first parameter mus be of type HttpRequest",
 				method
 			);
 		}
 		if (parameterTypes[1] != PathVariables.class) {
 			throw new InvalidControllerMethodException(
-				"Second parameter must be of type PathVariables",
+				"second parameter must be of type PathVariables",
 				method
 			);
 		}
@@ -209,7 +223,7 @@ public class MappingTreeBuilder {
 	private void checkReturnType(Method method) {
 		if (method.getReturnType() != HttpResponse.class) {
 			throw new InvalidControllerMethodException(
-				"Return type must be of type HttpResponse",
+				"return type must be of type HttpResponse",
 				method
 			);
 		}

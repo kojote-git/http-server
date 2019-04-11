@@ -14,6 +14,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+/**
+ * A path nodes are objects that with their children and parents form tree-like hierarchical
+ * structure where each path node represents one object in this structure. <br/><br/>
+ *
+ * It is designed specifically for this library to be used as a holder of mappings between
+ * http methods and controller methods. <br/><br/>
+ *
+ * For example. Let's say we have following mappings:<br/>
+ * - {@code /home/page} - GET <br/>
+ * - {@code /home/page} - POST <br/><br/>
+ * Explanation:<br/><br/>
+ *
+ * Path template {@code /home/page} is mapped to two controllers, one of which processes
+ * GET requests and the other processes POST requests.<br/><br/>
+ *
+ * This template then forms a tree with the root in {@code home} node and the last node {@code page}
+ * which in turn holds these two mappings.<br/>
+ *
+ * Then when the request with the path {@code /home/page} and http method GET comes, we need
+ * to traverse the tree from root until we find necessary controller; otherwise if necessary
+ * controller is not found during traversing, we return nothing.
+ */
 class PathNode {
 	private static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("\\{.*?\\}");
 	private static Pattern CURLY_BRACES = Pattern.compile("\\{|\\}");

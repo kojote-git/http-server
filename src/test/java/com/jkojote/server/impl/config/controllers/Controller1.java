@@ -25,4 +25,10 @@ public class Controller1 {
 		return null;
 	}
 
+	public HttpResponse dummy(HttpRequest req, PathVariables vars) {
+		return null;
+	}
+
+	public void dummyVoid() { }
+
 }
