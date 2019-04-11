@@ -15,16 +15,67 @@ class ControllerMethodTree {
 	private PathNode root;
 
 	ControllerMethodTree() {
-		this.root = new PathNode("");
+		this.root = new PathNode(null, "");
 	}
 
 	PathNode getRoot() {
 		return root;
 	}
 
+	void mergeWith(ControllerMethodTree tree, MergeConflictOption conflictOption) {
+		mergeTree(this.root, tree.root, conflictOption);
+	}
+
+	private void mergeTree(PathNode thisRoot, PathNode targetRoot, MergeConflictOption conflictOption) {
+		for (PathNode targetChild : targetRoot.getChildren()) {
+			PathNode thisChild = thisRoot.findChildNodeByValue(targetChild);
+			if (thisChild == null) {
+				thisRoot.addChild(targetChild.copy());
+			} else if (targetChild.isLeaf()) {
+				mergeNode(thisChild, targetChild, conflictOption);
+			} else {
+				mergeNode(thisChild, targetChild, conflictOption);
+				mergeTree(thisChild, targetChild, conflictOption);
+			}
+		}
+	}
+
+	private void mergeNode(PathNode target, PathNode toBeMerged, MergeConflictOption conflictOption) {
+		for (HttpMethod method : toBeMerged.getPresentMethods()) {
+			if (target.hasMethod(method)) {
+				resolveMergeConflict(target, toBeMerged, method, conflictOption);
+			} else {
+				target.putControllerMethod(method, toBeMerged.getControllerMethod(method));
+			}
+		}
+	}
+
+	private void resolveMergeConflict(PathNode a, PathNode b, HttpMethod method, MergeConflictOption conflictOption) {
+		switch (conflictOption) {
+			case THROW_EXCEPTION:
+				throw new MergeConflictException(
+					"merge conflict for path " + a.buildPath(),
+					method,
+					a.buildPath()
+				);
+			case OVERWRITE:
+				a.putControllerMethod(method, b.getControllerMethod(method));
+				break;
+			case SILENT:
+				break;
+		}
+	}
+
 	void addControllerMethod(String pathTemplate,
 							 HttpMethod httpMethod,
 							 ControllerMethod controllerMethod) {
+		addControllerMethod(pathTemplate, httpMethod, controllerMethod, MergeConflictOption.THROW_EXCEPTION);
+	}
+
+	void addControllerMethod(String pathTemplate,
+							 HttpMethod httpMethod,
+							 ControllerMethod controllerMethod,
+							 MergeConflictOption mergeConflictOption) {
 		String[] nodes = pathTemplate.split("/");
 		PathNode currentNode = root;
 		for (String nodeValue : nodes) {
@@ -35,16 +86,19 @@ class ControllerMethodTree {
 			if (nextNode != null && isPathVariable(nodeValue)) {
 				if (!nodeValue.equals(nextNode.getValue())) {
 					throw new IllegalStateException(
-						"cannot have two different path variables at the same level"
+							"cannot have two different path variables at the same level"
 					);
 				}
 			} else if (nextNode == null || nextNode.isPathVariable()) {
-				nextNode = new PathNode(nodeValue);
+				nextNode = new PathNode(currentNode, nodeValue);
 				currentNode.addChild(nextNode);
 			}
 			currentNode = nextNode;
 		}
-		currentNode.putControllerMethod(httpMethod, controllerMethod);
+		putMethod(currentNode, httpMethod,
+			controllerMethod, pathTemplate,
+			mergeConflictOption
+		);
 	}
 
 	private boolean isRequestForRoot(HttpRequest request) {
@@ -122,6 +176,29 @@ class ControllerMethodTree {
 			}
 		}
 		return res == null ? variableNode : res;
+	}
+
+	private void putMethod(PathNode finalNode,
+						   HttpMethod httpMethod,
+						   ControllerMethod controllerMethod,
+						   String pathTemplate,
+						   MergeConflictOption option) {
+		if (finalNode.getControllerMethod(httpMethod) != null) {
+			switch (option) {
+				case THROW_EXCEPTION:
+					throw new MergeConflictException(
+						"mergeTree conflict with template " + pathTemplate, httpMethod,
+						pathTemplate
+					);
+				case OVERWRITE:
+					finalNode.putControllerMethod(httpMethod, controllerMethod);
+					break;
+				case SILENT:
+					break;
+			}
+		} else {
+			finalNode.putControllerMethod(httpMethod, controllerMethod);
+		}
 	}
 
 	private static class RequestResolutionImpl implements RequestResolution {

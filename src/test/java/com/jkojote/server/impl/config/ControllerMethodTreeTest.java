@@ -13,11 +13,147 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ControllerMethodTreeTest {
 	private ControllerMethod method = (req, var) -> null;
+
+	@Test(expected = MergeConflictException.class)
+	public void merge_mergeTwoTreesWithThrowExceptionOption_throwsException() {
+		ControllerMethodTree t1 = new ControllerMethodTree();
+		ControllerMethodTree t2 = new ControllerMethodTree();
+		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
+		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+
+		t2.addControllerMethod("/g", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/e", HttpMethod.GET, null);
+
+		t1.mergeWith(t2, MergeConflictOption.THROW_EXCEPTION);
+	}
+
+	@Test
+	public void merge_mergeTwoTreesWithOverwriteOption_testTheSecondTreeLeftUntouched() {
+		ControllerMethodTree t1 = new ControllerMethodTree();
+		ControllerMethodTree t2 = new ControllerMethodTree();
+
+		t1.addControllerMethod("/a", HttpMethod.GET, null);
+		t1.addControllerMethod("/a", HttpMethod.POST, null);
+		t1.addControllerMethod("/b", HttpMethod.GET, null);
+
+		t2.addControllerMethod("/a", HttpMethod.PUT, null);
+		t2.addControllerMethod("/b", HttpMethod.POST, null);
+		t2.addControllerMethod("/b", HttpMethod.PUT, null);
+		t2.addControllerMethod("/c/d", HttpMethod.POST, null);
+
+		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
+
+		PathNode t2Root = t2.getRoot();
+
+		PathNode a = t2Root.findChildNodeByValue("a");
+		PathNode b = t2Root.findChildNodeByValue("b");
+		PathNode c = t2Root.findChildNodeByValue("c");
+
+		assertEquals(t2Root, a.getParent());
+		assertEquals(t2Root, b.getParent());
+		assertEquals(t2Root, c.getParent());
+
+		PathNode d = c.findChildNodeByValue("d");
+
+		assertEquals(c, d.getParent());
+	}
+
+	@Test
+	public void merge_mergeTwoTreesWithOverwriteOption_testMergeCorrectness() {
+		ControllerMethodTree t1 = new ControllerMethodTree();
+		ControllerMethodTree t2 = new ControllerMethodTree();
+
+		t1.addControllerMethod("/a", HttpMethod.GET, null);
+		t1.addControllerMethod("/a", HttpMethod.POST, null);
+		t1.addControllerMethod("/b", HttpMethod.GET, null);
+
+		t2.addControllerMethod("/a", HttpMethod.PUT, null);
+		t2.addControllerMethod("/b", HttpMethod.POST, null);
+		t2.addControllerMethod("/b", HttpMethod.PUT, null);
+		t2.addControllerMethod("/c", HttpMethod.POST, null);
+
+		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
+
+		PathNode t1Root = t1.getRoot();
+
+		PathNode a = t1Root.findChildNodeByValue("a");
+		PathNode b = t1Root.findChildNodeByValue("b");
+		PathNode c = t1Root.findChildNodeByValue("c");
+
+		assertEquals(3, a.getPresentMethods().size());
+		assertTrue(a.getPresentMethods().contains(HttpMethod.GET));
+		assertTrue(a.getPresentMethods().contains(HttpMethod.POST));
+		assertTrue(a.getPresentMethods().contains(HttpMethod.PUT));
+
+		assertEquals(3, b.getPresentMethods().size());
+		assertTrue(b.getPresentMethods().contains(HttpMethod.GET));
+		assertTrue(b.getPresentMethods().contains(HttpMethod.POST));
+		assertTrue(b.getPresentMethods().contains(HttpMethod.PUT));
+
+		assertEquals(1, c.getPresentMethods().size());
+		assertTrue(c.getPresentMethods().contains(HttpMethod.POST));
+	}
+
+	@Test
+	public void merge_mergeTwoTreesWithOverwriteOption_testChildPresence() {
+		ControllerMethodTree t1 = new ControllerMethodTree();
+		ControllerMethodTree t2 = new ControllerMethodTree();
+		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
+		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+
+		t2.addControllerMethod("/g", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/e", HttpMethod.POST, null);
+
+		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
+
+		PathNode root = t1.getRoot();
+		PathNode a = root.findChildNodeByValue("a");
+		PathNode b = root.findChildNodeByValue("b");
+		PathNode g = root.findChildNodeByValue("g");
+		assertNotNull(a);
+		assertNotNull(b);
+		assertNotNull(g);
+
+		assertNotNull(a.findChildNodeByValue("c"));
+		assertNotNull(a.findChildNodeByValue("d"));
+		assertNotNull(a.findChildNodeByValue("e"));
+		assertNotNull(a.findChildNodeByValue("h"));
+		assertNotNull(a.findChildNodeByValue("i"));
+
+		assertEquals(5, a.getChildren().size());
+		assertEquals(1, b.getChildren().size());
+		assertTrue(g.isLeaf());
+	}
+
+	@Test
+	public void merge_MergeTwoTreesWithSilentOption() {
+		ControllerMethodTree t1 = new ControllerMethodTree();
+		ControllerMethodTree t2 = new ControllerMethodTree();
+		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
+		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
+		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+
+		t2.addControllerMethod("/g", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
+		t2.addControllerMethod("/a/e", HttpMethod.GET, null);
+
+	}
 
 	@Test
 	public void addControllerMethod_addMethodsAndCheckIfTreeIsSuccessfullyBuilt() {
