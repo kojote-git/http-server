@@ -4,29 +4,43 @@ import com.jkojote.server.ControllerMethod;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.PathVariables;
+import com.jkojote.server.exceptions.MergeConflictException;
 
 import java.util.regex.Pattern;
 
 import static com.jkojote.server.ServerConfiguration.RequestResolution;
 
-class ControllerMethodTree {
+class MappingTree {
 	private static Pattern PATH_VARIABLE_PATTERN = Pattern.compile("\\{.*?\\}");
 
 	private PathNode root;
 
-	ControllerMethodTree() {
+	MappingTree() {
 		this.root = new PathNode(null, "");
+	}
+
+	private MappingTree(PathNode root) {
+		this.root = root;
 	}
 
 	PathNode getRoot() {
 		return root;
 	}
 
-	void mergeWith(ControllerMethodTree tree, MergeConflictOption conflictOption) {
-		mergeTree(this.root, tree.root, conflictOption);
+	MappingTree mergeWith(MappingTree tree, MergeConflictOption conflictOption) {
+		return mergeTree(this.root, tree.root, conflictOption);
 	}
 
-	private void mergeTree(PathNode thisRoot, PathNode targetRoot, MergeConflictOption conflictOption) {
+	MappingTree mergeWith(MappingTree tree) {
+		return mergeWith(tree, MergeConflictOption.THROW_EXCEPTION);
+	}
+
+	MappingTree copy() {
+		PathNode newRoot = root.copy();
+		return new MappingTree(newRoot);
+	}
+
+	private MappingTree mergeTree(PathNode thisRoot, PathNode targetRoot, MergeConflictOption conflictOption) {
 		for (PathNode targetChild : targetRoot.getChildren()) {
 			PathNode thisChild = thisRoot.findChildNodeByValue(targetChild);
 			if (thisChild == null) {
@@ -38,6 +52,7 @@ class ControllerMethodTree {
 				mergeTree(thisChild, targetChild, conflictOption);
 			}
 		}
+		return this;
 	}
 
 	private void mergeNode(PathNode target, PathNode toBeMerged, MergeConflictOption conflictOption) {
@@ -86,7 +101,7 @@ class ControllerMethodTree {
 			if (nextNode != null && isPathVariable(nodeValue)) {
 				if (!nodeValue.equals(nextNode.getValue())) {
 					throw new IllegalStateException(
-							"cannot have two different path variables at the same level"
+						"cannot have two different path variables at the same level"
 					);
 				}
 			} else if (nextNode == null || nextNode.isPathVariable()) {

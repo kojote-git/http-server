@@ -4,6 +4,7 @@ import com.jkojote.server.ControllerMethod;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.PathVariables;
+import com.jkojote.server.exceptions.MergeConflictException;
 
 import static com.jkojote.server.ServerConfiguration.RequestResolution;
 
@@ -17,13 +18,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ControllerMethodTreeTest {
+public class MappingTreeTest {
 	private ControllerMethod method = (req, var) -> null;
 
 	@Test(expected = MergeConflictException.class)
 	public void merge_mergeTwoTreesWithThrowExceptionOption_throwsException() {
-		ControllerMethodTree t1 = new ControllerMethodTree();
-		ControllerMethodTree t2 = new ControllerMethodTree();
+		MappingTree t1 = new MappingTree();
+		MappingTree t2 = new MappingTree();
 		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
@@ -39,8 +40,8 @@ public class ControllerMethodTreeTest {
 
 	@Test
 	public void merge_mergeTwoTreesWithOverwriteOption_testTheSecondTreeLeftUntouched() {
-		ControllerMethodTree t1 = new ControllerMethodTree();
-		ControllerMethodTree t2 = new ControllerMethodTree();
+		MappingTree t1 = new MappingTree();
+		MappingTree t2 = new MappingTree();
 
 		t1.addControllerMethod("/a", HttpMethod.GET, null);
 		t1.addControllerMethod("/a", HttpMethod.POST, null);
@@ -70,8 +71,8 @@ public class ControllerMethodTreeTest {
 
 	@Test
 	public void merge_mergeTwoTreesWithOverwriteOption_testMergeCorrectness() {
-		ControllerMethodTree t1 = new ControllerMethodTree();
-		ControllerMethodTree t2 = new ControllerMethodTree();
+		MappingTree t1 = new MappingTree();
+		MappingTree t2 = new MappingTree();
 
 		t1.addControllerMethod("/a", HttpMethod.GET, null);
 		t1.addControllerMethod("/a", HttpMethod.POST, null);
@@ -106,8 +107,8 @@ public class ControllerMethodTreeTest {
 
 	@Test
 	public void merge_mergeTwoTreesWithOverwriteOption_testChildPresence() {
-		ControllerMethodTree t1 = new ControllerMethodTree();
-		ControllerMethodTree t2 = new ControllerMethodTree();
+		MappingTree t1 = new MappingTree();
+		MappingTree t2 = new MappingTree();
 		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
@@ -141,8 +142,8 @@ public class ControllerMethodTreeTest {
 
 	@Test
 	public void merge_MergeTwoTreesWithSilentOption() {
-		ControllerMethodTree t1 = new ControllerMethodTree();
-		ControllerMethodTree t2 = new ControllerMethodTree();
+		MappingTree t1 = new MappingTree();
+		MappingTree t2 = new MappingTree();
 		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
 		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
@@ -157,7 +158,7 @@ public class ControllerMethodTreeTest {
 
 	@Test
 	public void addControllerMethod_addMethodsAndCheckIfTreeIsSuccessfullyBuilt() {
-		ControllerMethodTree tree = new ControllerMethodTree();
+		MappingTree tree = new MappingTree();
 		tree.addControllerMethod("/", HttpMethod.GET, method);
 		tree.addControllerMethod("/a/aa", HttpMethod.GET, method);
 		tree.addControllerMethod("/a/ab", HttpMethod.POST, method);
@@ -194,7 +195,7 @@ public class ControllerMethodTreeTest {
 	public void resolveControllerMethod_successfullyResolveMethods() {
 		ControllerMethod methodGet = (req, var) -> null;
 		ControllerMethod methodPost = (req, var) -> null;
-		ControllerMethodTree tree = new ControllerMethodTree();
+		MappingTree tree = new MappingTree();
 		assertNotEquals(methodGet, methodPost);
 		tree.addControllerMethod("/a/ab", HttpMethod.GET, methodGet);
 		tree.addControllerMethod("/a/ab", HttpMethod.POST, methodPost);
@@ -242,7 +243,7 @@ public class ControllerMethodTreeTest {
 	public void resolveMethod_unsuccessfullyResolveMethods() {
 		ControllerMethod methodGet = (req, var) -> null;
 		ControllerMethod methodPost = (req, var) -> null;
-		ControllerMethodTree tree = new ControllerMethodTree();
+		MappingTree tree = new MappingTree();
 		assertNotEquals(methodGet, methodPost);
 		tree.addControllerMethod("/a/ab", HttpMethod.GET, methodGet);
 		tree.addControllerMethod("/{b}/", HttpMethod.GET, methodGet);

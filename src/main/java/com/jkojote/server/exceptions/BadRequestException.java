@@ -1,4 +1,4 @@
-package com.jkojote.server.impl;
+package com.jkojote.server.exceptions;
 
 public class BadRequestException extends RuntimeException {
 	public BadRequestException() {

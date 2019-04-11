@@ -13,6 +13,7 @@ import com.jkojote.server.ServerConfiguration;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.bodies.StreamRequestBody;
+import com.jkojote.server.exceptions.BadRequestException;
 import com.jkojote.server.utils.IOUtils;
 
 import java.io.IOException;
@@ -67,7 +68,7 @@ class HttpRequestHandler implements Runnable {
 			RequestResolution requestResolution = configuration.resolveRequest(request);
 			if (requestResolution == null) {
 				ErrorDataImpl errorData = new ErrorDataImpl()
-					.setMessage("cannot find appropriate controller")
+					.setMessage("cannot resolve request")
 					.putStatus(HttpStatus.NOT_FOUND)
 					.putRequest(request)
 					.putProperty(ErrorProperties.PATH, request.getPath());

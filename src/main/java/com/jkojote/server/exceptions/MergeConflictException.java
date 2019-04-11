@@ -1,4 +1,4 @@
-package com.jkojote.server.impl.config;
+package com.jkojote.server.exceptions;
 
 import com.jkojote.server.HttpMethod;
 

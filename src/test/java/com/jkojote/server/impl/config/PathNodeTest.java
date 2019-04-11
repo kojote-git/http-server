@@ -3,7 +3,10 @@ package com.jkojote.server.impl.config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class PathNodeTest {
 
@@ -16,13 +19,14 @@ public class PathNodeTest {
 		root.addChild(a);
 		a.addChild(c);
 
-		PathNode cCopy = c.copy();
-		PathNode aCopy = cCopy.getParent();
-		PathNode rootCopy = aCopy.getParent();
+		PathNode rootCopy = root.copy();
+		PathNode aCopy = root.findChildNodeByValue("a");
+		PathNode cCopy = aCopy.findChildNodeByValue("c");
 
-		assertEquals("c", cCopy.getValue());
-		assertEquals("a", aCopy.getValue());
-		assertEquals("", rootCopy.getValue());
-		assertNull(rootCopy.getParent());
+		assertEquals(1, rootCopy.getChildren().size());
+		assertEquals(1, aCopy.getChildren().size());
+		assertTrue(cCopy.isLeaf());
+
+		assertNotNull(cCopy);
 	}
 }
