@@ -22,9 +22,9 @@ public class EchoController {
 	}
 
 	@RequestMapping("/echo/{message}/{n}")
-	public HttpResponse echoMessageNTimes(HttpRequest request, PathVariables variables) {
-		String message = variables.getPathVariable("message");
-		int n = Integer.parseInt(variables.getPathVariable("n"));
+	public HttpResponse echoMessageNTimes(HttpRequest request, PathVariables vars) {
+		String message = vars.getPathVariable("message");
+		int n = vars.convertVariable("n", Integer::parseInt);
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < n; i++) {
 			sb.append(message);

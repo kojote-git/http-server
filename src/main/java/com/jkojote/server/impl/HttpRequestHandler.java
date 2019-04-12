@@ -16,6 +16,9 @@ import com.jkojote.server.bodies.StreamRequestBody;
 import com.jkojote.server.exceptions.BadRequestException;
 import com.jkojote.server.utils.IOUtils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,6 +34,8 @@ import static com.jkojote.server.ServerConfiguration.RequestResolution;
 import static com.jkojote.server.ServerConfiguration.ErrorData;
 
 class HttpRequestHandler implements Runnable {
+	private static final Logger LOG = LoggerFactory.getLogger("com.jkojote.server.HttpServer");
+
 	static final Pattern METHOD_PATTERN = Pattern.compile(
 		"GET|POST|PUT|PATCH|OPTIONS|DELETE|HEAD"
 	);
@@ -58,7 +63,7 @@ class HttpRequestHandler implements Runnable {
 			 OutputStream out = socket.getOutputStream()) {
 			handleRequest(in, out);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("An exception occurred", e);
 		}
 	}
 
@@ -91,7 +96,6 @@ class HttpRequestHandler implements Runnable {
 			);
 			writeResponse(out, badRequest == null ? Responses.BAD_REQUEST : badRequest);
 		} catch (RuntimeException e) {
-			// TODO log exception
 			ErrorDataImpl errorData = new ErrorDataImpl()
 				.setMessage("internal error")
 				.putStatus(HttpStatus.INTERNAL_ERROR)
@@ -99,7 +103,7 @@ class HttpRequestHandler implements Runnable {
 			HttpResponse internalError = configuration.getResponseOnError(
 				HttpStatus.INTERNAL_ERROR, errorData
 			);
-			e.printStackTrace();
+			LOG.error("An exception occured ", e);
 			writeResponse(out, internalError == null ? Responses.INTERNAL_ERROR : internalError);
 		}
 	}

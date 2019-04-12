@@ -2,12 +2,17 @@ package com.jkojote.server.impl;
 
 import com.jkojote.server.ServerConfiguration;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class HttpServer implements Runnable {
+	private static Logger LOG = LoggerFactory.getLogger("com.jkojote.server.HttpServer");
+
 	private ServerSocket socket;
 	private ServerConfiguration configuration;
 	private ExecutorService executorService;
@@ -46,7 +51,7 @@ public class HttpServer implements Runnable {
 			try {
 				executorService.execute(new HttpRequestHandler(socket.accept(), configuration));
 			} catch (IOException e) {
-				// TODO logging
+				LOG.error("An IOException occurred", e);
 				e.printStackTrace();
 			}
 		}
