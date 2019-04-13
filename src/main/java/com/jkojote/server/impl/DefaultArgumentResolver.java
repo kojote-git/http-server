@@ -27,7 +27,7 @@ class DefaultArgumentResolver implements ArgumentsResolver {
 				String name = parameter.getName();
 				String variable = variables.getPathVariable(parameter.getName());
 				try {
-					args[index] = parameter.getConverter().apply(name);
+					args[index] = parameter.getConverter().apply(variables.getPathVariable(name));
 				} catch (RuntimeException e) {
 					throw new PathVariableFormatException(e, "cannot convert path variable",
 						name, variable
