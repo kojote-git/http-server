@@ -1,6 +1,7 @@
 package com.jkojote.server.impl.config;
 
 import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.FunctionalResponse;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
@@ -27,7 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MappingTreeBuilder {
+class MappingTreeBuilder {
+	private static final ControllerMethodCreator METHOD_CREATOR = new ControllerMethodCreator();
 	private HashMap<Class<? extends Annotation>, HttpMethod> annotationMethodMap;
 	private Set<Class<? extends Annotation>> methodAnnotations;
 
@@ -82,10 +84,21 @@ public class MappingTreeBuilder {
 			Mapping mapping = getFirstMapping(method);
 			checkPathTemplate(mapping.path);
 			String resolvedPathTemplate = resolvePathTemplate(basePath, mapping.path);
-			ControllerMethod controllerMethod = new AnnotatedControllerMethod(controller, method);
-			tree.addControllerMethod(resolvedPathTemplate, mapping.method, controllerMethod);
+			ControllerMethod controllerMethod = createControllerMethod(
+				resolvedPathTemplate, controller, method
+			);
+			tree.addControllerMethod(
+				resolvedPathTemplate,
+				mapping.method,
+				controllerMethod,
+				MergeConflictOption.THROW_EXCEPTION
+			);
 		}
 		return tree;
+	}
+
+	private ControllerMethod createControllerMethod(String pathTemplate, Object object, Method method) {
+		return METHOD_CREATOR.create(pathTemplate, object, method);
 	}
 
 	private Mapping getFirstMapping(Method method) {
@@ -179,7 +192,6 @@ public class MappingTreeBuilder {
 	private void checkMethod(Method method) {
 		checkNotStatic(method);
 		checkAccess(method);
-		checkParameters(method);
 		checkReturnType(method);
 	}
 
@@ -196,25 +208,6 @@ public class MappingTreeBuilder {
 		if (!Modifier.isPublic(method.getModifiers())) {
 			throw new InvalidControllerMethodException(
 				"method must be public",
-				method
-			);
-		}
-	}
-
-	private void checkParameters(Method method) {
-		if (method.getParameters().length != 2) {
-			throw new InvalidControllerMethodException("illegal number of parameters", method);
-		}
-		Class<?>[] parameterTypes = method.getParameterTypes();
-		if (parameterTypes[0] != HttpRequest.class) {
-			throw new InvalidControllerMethodException(
-				"first parameter mus be of type HttpRequest",
-				method
-			);
-		}
-		if (parameterTypes[1] != PathVariables.class) {
-			throw new InvalidControllerMethodException(
-				"second parameter must be of type PathVariables",
 				method
 			);
 		}
@@ -239,7 +232,7 @@ public class MappingTreeBuilder {
 		}
 	}
 
-	private static class AnnotatedControllerMethod implements ControllerMethod {
+	private static class AnnotatedControllerMethod implements FunctionalResponse {
 		private Object controller;
 		private Method method;
 

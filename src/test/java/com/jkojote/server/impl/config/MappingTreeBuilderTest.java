@@ -90,11 +90,6 @@ public class MappingTreeBuilderTest {
 	}
 
 	@Test(expected = InvalidControllerMethodException.class)
-	public void build_invalidController_invalidSignature() {
-		builder.build(new InvalidController_InvalidSignature());
-	}
-
-	@Test(expected = InvalidControllerMethodException.class)
 	public void build_invalidController_invalidReturnType() {
 		builder.build(new InvalidTestController_InvaludReturnType());
 	}

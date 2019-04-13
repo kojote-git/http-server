@@ -8,17 +8,19 @@ import com.jkojote.server.annotation.RequestMapping;
 import com.jkojote.server.bodies.ByteResponseBody;
 import com.jkojote.server.impl.HttpResponseBuilder;
 
+import static com.jkojote.server.HttpStatus.OK;
+
 public class EchoController {
 
 	@RequestMapping("/echo")
 	public HttpResponse echo(HttpRequest request, PathVariables variables) {
-		return stringResponse(HttpStatus.OK, "echo");
+		return stringResponse(OK, "echo");
 	}
 
 	@RequestMapping("/echo/{message}")
 	public HttpResponse echoMessage(HttpRequest request, PathVariables variables) {
 		String message = variables.getPathVariable("message");
-		return stringResponse(HttpStatus.OK, message);
+		return stringResponse(OK, message);
 	}
 
 	@RequestMapping("/echo/{message}/{n}")
@@ -29,8 +31,9 @@ public class EchoController {
 		for (int i = 0; i < n; i++) {
 			sb.append(message);
 		}
-		return stringResponse(HttpStatus.OK, sb.toString());
+		return stringResponse(OK, sb.toString());
 	}
+
 
 	private HttpResponse stringResponse(HttpStatus status, String string) {
 		byte[] bytes = string.getBytes();

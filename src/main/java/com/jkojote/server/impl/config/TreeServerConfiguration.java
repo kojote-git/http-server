@@ -1,6 +1,6 @@
 package com.jkojote.server.impl.config;
 
-import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.FunctionalResponse;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
@@ -35,8 +35,8 @@ public class TreeServerConfiguration implements ServerConfiguration {
 
 	public TreeServerConfiguration addControllerMethod(String template,
 													   HttpMethod httpMethod,
-													   ControllerMethod controllerMethod) {
-		tree.addControllerMethod(template, httpMethod, controllerMethod);
+													   FunctionalResponse functionalResponse) {
+		tree.addFunctionalResponse(template, httpMethod, functionalResponse);
 		return this;
 	}
 

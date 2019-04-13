@@ -1,6 +1,6 @@
 package com.jkojote.server.impl.config;
 
-import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.FunctionalResponse;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.PathVariables;
@@ -19,21 +19,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class MappingTreeTest {
-	private ControllerMethod method = (req, var) -> null;
+	private FunctionalResponse method = (req, var) -> null;
 
 	@Test(expected = MergeConflictException.class)
 	public void merge_mergeTwoTreesWithThrowExceptionOption_throwsException() {
 		MappingTree t1 = new MappingTree();
 		MappingTree t2 = new MappingTree();
-		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
-		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/c", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/d", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/e", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/b/f", HttpMethod.GET, null);
 
-		t2.addControllerMethod("/g", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/e", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/g", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/h", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/i", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/e", HttpMethod.GET, null);
 
 		t1.mergeWith(t2, MergeConflictOption.THROW_EXCEPTION);
 	}
@@ -43,14 +43,14 @@ public class MappingTreeTest {
 		MappingTree t1 = new MappingTree();
 		MappingTree t2 = new MappingTree();
 
-		t1.addControllerMethod("/a", HttpMethod.GET, null);
-		t1.addControllerMethod("/a", HttpMethod.POST, null);
-		t1.addControllerMethod("/b", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a", HttpMethod.POST, null);
+		t1.addFunctionalResponse("/b", HttpMethod.GET, null);
 
-		t2.addControllerMethod("/a", HttpMethod.PUT, null);
-		t2.addControllerMethod("/b", HttpMethod.POST, null);
-		t2.addControllerMethod("/b", HttpMethod.PUT, null);
-		t2.addControllerMethod("/c/d", HttpMethod.POST, null);
+		t2.addFunctionalResponse("/a", HttpMethod.PUT, null);
+		t2.addFunctionalResponse("/b", HttpMethod.POST, null);
+		t2.addFunctionalResponse("/b", HttpMethod.PUT, null);
+		t2.addFunctionalResponse("/c/d", HttpMethod.POST, null);
 
 		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
 
@@ -74,14 +74,14 @@ public class MappingTreeTest {
 		MappingTree t1 = new MappingTree();
 		MappingTree t2 = new MappingTree();
 
-		t1.addControllerMethod("/a", HttpMethod.GET, null);
-		t1.addControllerMethod("/a", HttpMethod.POST, null);
-		t1.addControllerMethod("/b", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a", HttpMethod.POST, null);
+		t1.addFunctionalResponse("/b", HttpMethod.GET, null);
 
-		t2.addControllerMethod("/a", HttpMethod.PUT, null);
-		t2.addControllerMethod("/b", HttpMethod.POST, null);
-		t2.addControllerMethod("/b", HttpMethod.PUT, null);
-		t2.addControllerMethod("/c", HttpMethod.POST, null);
+		t2.addFunctionalResponse("/a", HttpMethod.PUT, null);
+		t2.addFunctionalResponse("/b", HttpMethod.POST, null);
+		t2.addFunctionalResponse("/b", HttpMethod.PUT, null);
+		t2.addFunctionalResponse("/c", HttpMethod.POST, null);
 
 		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
 
@@ -109,15 +109,15 @@ public class MappingTreeTest {
 	public void merge_mergeTwoTreesWithOverwriteOption_testChildPresence() {
 		MappingTree t1 = new MappingTree();
 		MappingTree t2 = new MappingTree();
-		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
-		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/c", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/d", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/e", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/b/f", HttpMethod.GET, null);
 
-		t2.addControllerMethod("/g", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/e", HttpMethod.POST, null);
+		t2.addFunctionalResponse("/g", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/h", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/i", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/e", HttpMethod.POST, null);
 
 		t1.mergeWith(t2, MergeConflictOption.OVERWRITE);
 
@@ -144,31 +144,30 @@ public class MappingTreeTest {
 	public void merge_MergeTwoTreesWithSilentOption() {
 		MappingTree t1 = new MappingTree();
 		MappingTree t2 = new MappingTree();
-		t1.addControllerMethod("/a/c", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/d", HttpMethod.GET, null);
-		t1.addControllerMethod("/a/e", HttpMethod.GET, null);
-		t1.addControllerMethod("/b/f", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/c", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/d", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/a/e", HttpMethod.GET, null);
+		t1.addFunctionalResponse("/b/f", HttpMethod.GET, null);
 
-		t2.addControllerMethod("/g", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/h", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/i", HttpMethod.GET, null);
-		t2.addControllerMethod("/a/e", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/g", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/h", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/i", HttpMethod.GET, null);
+		t2.addFunctionalResponse("/a/e", HttpMethod.GET, null);
 
 	}
 
 	@Test
 	public void addControllerMethod_addMethodsAndCheckIfTreeIsSuccessfullyBuilt() {
 		MappingTree tree = new MappingTree();
-		tree.addControllerMethod("/", HttpMethod.GET, method);
-		tree.addControllerMethod("/a/aa", HttpMethod.GET, method);
-		tree.addControllerMethod("/a/ab", HttpMethod.POST, method);
-		tree.addControllerMethod("/a/ab", HttpMethod.GET, method);
-		tree.addControllerMethod("/a/ab/abc", HttpMethod.GET, method);
-		tree.addControllerMethod("/b", HttpMethod.GET, method);
+		tree.addFunctionalResponse("/", HttpMethod.GET, method);
+		tree.addFunctionalResponse("/a/aa", HttpMethod.GET, method);
+		tree.addFunctionalResponse("/a/ab", HttpMethod.POST, method);
+		tree.addFunctionalResponse("/a/ab", HttpMethod.GET, method);
+		tree.addFunctionalResponse("/a/ab/abc", HttpMethod.GET, method);
+		tree.addFunctionalResponse("/b", HttpMethod.GET, method);
 		PathNode root = tree.getRoot();
 
 		assertEquals(2, root.getChildren().size());
-		assertEquals(method, root.getControllerMethod(HttpMethod.GET));
 
 		PathNode a = getChildNode(root, "a");
 		assertNotNull(a);
@@ -177,55 +176,47 @@ public class MappingTreeTest {
 		PathNode ab = getChildNode(a, "ab");
 		assertNotNull(ab);
 		assertEquals(1, ab.getChildren().size());
-		assertEquals(method, ab.getControllerMethod(HttpMethod.GET));
-		assertEquals(method, ab.getControllerMethod(HttpMethod.POST));
 
 		PathNode abc = getChildNode(ab, "abc");
 		assertNotNull(abc);
 		assertEquals(0, abc.getChildren().size());
-		assertEquals(method, ab.getControllerMethod(HttpMethod.GET));
 
 		PathNode b = getChildNode(root, "b");
 		assertNotNull(b);
 		assertEquals(0, b.getChildren().size());
-		assertEquals(method, b.getControllerMethod(HttpMethod.GET));
 	}
 
 	@Test
 	public void resolveControllerMethod_successfullyResolveMethods() {
-		ControllerMethod methodGet = (req, var) -> null;
-		ControllerMethod methodPost = (req, var) -> null;
+		FunctionalResponse methodGet = (req, var) -> null;
+		FunctionalResponse methodPost = (req, var) -> null;
 		MappingTree tree = new MappingTree();
 		assertNotEquals(methodGet, methodPost);
-		tree.addControllerMethod("/a/ab", HttpMethod.GET, methodGet);
-		tree.addControllerMethod("/a/ab", HttpMethod.POST, methodPost);
-		tree.addControllerMethod("/a/{ab}", HttpMethod.POST, methodPost);
-		tree.addControllerMethod("/a/{ab}/ab", HttpMethod.POST, methodPost);
-		tree.addControllerMethod("/a/cd/{b}/{c}/d/", HttpMethod.GET, methodGet);
+		tree.addFunctionalResponse("/a/ab", HttpMethod.GET, methodGet);
+		tree.addFunctionalResponse("/a/ab", HttpMethod.POST, methodPost);
+		tree.addFunctionalResponse("/a/{ab}", HttpMethod.POST, methodPost);
+		tree.addFunctionalResponse("/a/{ab}/ab", HttpMethod.POST, methodPost);
+		tree.addFunctionalResponse("/a/cd/{b}/{c}/d/", HttpMethod.GET, methodGet);
 
 		HttpRequest request = mockRequest("/a/ab", HttpMethod.GET);
 		RequestResolution resolution = tree.resolveRequest(request);
 		assertNotNull(resolution);
-		assertEquals(methodGet, resolution.getMethod());
 		assertEquals(0, resolution.getPathVariables().size());
 
 		request = mockRequest("/a/ab", HttpMethod.POST);
 		resolution = tree.resolveRequest(request);
 		assertNotNull(resolution);
-		assertEquals(methodPost, resolution.getMethod());
 		assertEquals(0, resolution.getPathVariables().size());
 
 		request = mockRequest("/a/1", HttpMethod.POST);
 		resolution = tree.resolveRequest(request);
 		assertNotNull(resolution);
-		assertEquals(methodPost, resolution.getMethod());
 		assertEquals(1, resolution.getPathVariables().size());
 		assertEquals("1", resolution.getPathVariables().getPathVariable("ab"));
 
 		request = mockRequest("/a/1/ab", HttpMethod.POST);
 		resolution = tree.resolveRequest(request);
 		assertNotNull(resolution);
-		assertEquals(methodPost, resolution.getMethod());
 		assertEquals(1, resolution.getPathVariables().size());
 		assertEquals("1", resolution.getPathVariables().getPathVariable("ab"));
 
@@ -233,7 +224,6 @@ public class MappingTreeTest {
 		resolution = tree.resolveRequest(request);
 		PathVariables vars = resolution.getPathVariables();
 		assertNotNull(resolution);
-		assertEquals(methodGet, resolution.getMethod());
 		assertEquals(2, vars.size());
 		assertEquals("b", vars.getPathVariable("b"));
 		assertEquals("c", vars.getPathVariable("c"));
@@ -241,12 +231,12 @@ public class MappingTreeTest {
 
 	@Test
 	public void resolveMethod_unsuccessfullyResolveMethods() {
-		ControllerMethod methodGet = (req, var) -> null;
-		ControllerMethod methodPost = (req, var) -> null;
+		FunctionalResponse methodGet = (req, var) -> null;
+		FunctionalResponse methodPost = (req, var) -> null;
 		MappingTree tree = new MappingTree();
 		assertNotEquals(methodGet, methodPost);
-		tree.addControllerMethod("/a/ab", HttpMethod.GET, methodGet);
-		tree.addControllerMethod("/{b}/", HttpMethod.GET, methodGet);
+		tree.addFunctionalResponse("/a/ab", HttpMethod.GET, methodGet);
+		tree.addFunctionalResponse("/{b}/", HttpMethod.GET, methodGet);
 
 		HttpRequest request = mockRequest("/", HttpMethod.GET);
 		RequestResolution resolution = tree.resolveRequest(request);

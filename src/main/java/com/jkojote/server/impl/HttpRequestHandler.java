@@ -14,6 +14,7 @@ import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.bodies.StreamRequestBody;
 import com.jkojote.server.exceptions.BadRequestException;
+import com.jkojote.server.exceptions.PathVariableFormatException;
 import com.jkojote.server.utils.IOUtils;
 
 import org.slf4j.Logger;
@@ -43,6 +44,8 @@ class HttpRequestHandler implements Runnable {
 	static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(
 		"^(" + METHOD_PATTERN + ") " + "\\S+ HTTP/\\d\\.\\d$"
 	);
+
+	private static final ArgumentsResolver ARGUMENTS_RESOLVER = new DefaultArgumentResolver();
 	private static final byte[] CRLF = "\r\n".getBytes();
 	private static final byte[] HTTP_VERSION = "HTTP/1.1".getBytes();
 	private static final byte[] SPACE = " ".getBytes();
@@ -85,14 +88,15 @@ class HttpRequestHandler implements Runnable {
 			}
 			ControllerMethod method = requestResolution.getMethod();
 			PathVariables pathVariables = requestResolution.getPathVariables();
-			writeResponse(out, method.process(request, pathVariables));
-		} catch (BadRequestException e) {
+			Object[] args = ARGUMENTS_RESOLVER.resolve(method, request, pathVariables);
+			writeResponse(out, method.execute(args));
+		} catch (BadRequestException | PathVariableFormatException e) {
 			ErrorDataImpl errorData = new ErrorDataImpl()
-				.setMessage("bad request")
-				.putStatus(HttpStatus.BAD_REQUEST)
-				.putException(e);
+					.setMessage("bad request")
+					.putStatus(HttpStatus.BAD_REQUEST)
+					.putException(e);
 			HttpResponse badRequest = configuration.getResponseOnError(
-				HttpStatus.BAD_REQUEST, errorData
+					HttpStatus.BAD_REQUEST, errorData
 			);
 			writeResponse(out, badRequest == null ? Responses.BAD_REQUEST : badRequest);
 		} catch (RuntimeException e) {

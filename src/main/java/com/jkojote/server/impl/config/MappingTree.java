@@ -1,6 +1,7 @@
 package com.jkojote.server.impl.config;
 
 import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.FunctionalResponse;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpRequest;
 import com.jkojote.server.PathVariables;
@@ -88,11 +89,23 @@ class MappingTree {
 		}
 	}
 
-	void addControllerMethod(String pathTemplate,
-							 HttpMethod httpMethod,
-							 ControllerMethod controllerMethod) {
-		addControllerMethod(pathTemplate, httpMethod, controllerMethod, MergeConflictOption.THROW_EXCEPTION);
+	void addFunctionalResponse(String pathTemplate,
+							   HttpMethod httpMethod,
+							   FunctionalResponse functionalResponse) {
+		addFunctionalResponse(pathTemplate, httpMethod, functionalResponse, MergeConflictOption.THROW_EXCEPTION);
 	}
+
+	void addFunctionalResponse(String pathTemplate,
+							   HttpMethod httpMethod,
+							   FunctionalResponse functionalResponse,
+							   MergeConflictOption mergeConflictOption) {
+		addControllerMethod(
+			pathTemplate, httpMethod,
+			new FunctionalResponseWrapper(functionalResponse),
+			mergeConflictOption
+		);
+	}
+
 
 	void addControllerMethod(String pathTemplate,
 							 HttpMethod httpMethod,
@@ -108,7 +121,7 @@ class MappingTree {
 			if (nextNode != null && isPathVariable(nodeValue)) {
 				if (!nodeValue.equals(nextNode.getValue())) {
 					throw new IllegalStateException(
-						"cannot have two different path variables at the same level"
+							"cannot have two different path variables at the same level"
 					);
 				}
 			} else if (nextNode == null || nextNode.isPathVariable()) {
@@ -118,8 +131,9 @@ class MappingTree {
 			currentNode = nextNode;
 		}
 		putMethod(currentNode, httpMethod,
-			controllerMethod, pathTemplate,
-			mergeConflictOption
+				controllerMethod,
+				pathTemplate,
+				mergeConflictOption
 		);
 	}
 
@@ -224,18 +238,18 @@ class MappingTree {
 	}
 
 	private static class RequestResolutionImpl implements RequestResolution {
-		private ControllerMethod controllerMethod;
+		private ControllerMethod functionalResponse;
 		private PathVariables pathVariables;
 
-		private RequestResolutionImpl(ControllerMethod controllerMethod,
+		private RequestResolutionImpl(ControllerMethod functionalResponse,
 									  PathVariables pathVariables) {
-			this.controllerMethod = controllerMethod;
+			this.functionalResponse = functionalResponse;
 			this.pathVariables = pathVariables;
 		}
 
 		@Override
 		public ControllerMethod getMethod() {
-			return controllerMethod;
+			return functionalResponse;
 		}
 
 		public PathVariables getPathVariables() {
