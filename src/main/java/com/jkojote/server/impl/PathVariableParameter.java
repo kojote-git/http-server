@@ -1,16 +1,17 @@
 package com.jkojote.server.impl;
 
 import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.PathVariableConverter;
 
 import java.util.function.Function;
 
 public class PathVariableParameter implements ControllerMethod.Parameter {
 	private int index;
 	private String name;
-	private Function<String, Object> converter;
+	private PathVariableConverter<?> converter;
 	private Class<?> type;
 
-	public PathVariableParameter(int index, String name, Function<String, Object> converter, Class<?> type) {
+	public PathVariableParameter(int index, String name, PathVariableConverter<?> converter, Class<?> type) {
 		this.index = index;
 		this.name = name;
 		this.converter = converter;
@@ -33,7 +34,7 @@ public class PathVariableParameter implements ControllerMethod.Parameter {
 	}
 
 	@Override
-	public Function<String, Object> getConverter() {
+	public PathVariableConverter<?> getConverter() {
 		return converter;
 	}
 

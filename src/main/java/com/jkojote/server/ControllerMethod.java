@@ -1,7 +1,6 @@
 package com.jkojote.server;
 
 import java.util.List;
-import java.util.function.Function;
 
 public interface ControllerMethod {
 
@@ -17,7 +16,7 @@ public interface ControllerMethod {
 
 		String getName();
 
-		default Function<String, Object> getConverter() { return String::toString; }
+		PathVariableConverter<?> getConverter();
 
 		Class<?> getType();
 	}

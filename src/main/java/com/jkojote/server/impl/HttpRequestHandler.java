@@ -14,7 +14,7 @@ import com.jkojote.server.HttpRequest;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.bodies.StreamRequestBody;
 import com.jkojote.server.exceptions.BadRequestException;
-import com.jkojote.server.exceptions.PathVariableFormatException;
+import com.jkojote.server.exceptions.PathVariableConversionException;
 import com.jkojote.server.utils.IOUtils;
 
 import org.slf4j.Logger;
@@ -90,7 +90,7 @@ class HttpRequestHandler implements Runnable {
 			PathVariables pathVariables = requestResolution.getPathVariables();
 			Object[] args = ARGUMENTS_RESOLVER.resolve(method, request, pathVariables);
 			writeResponse(out, method.execute(args));
-		} catch (BadRequestException | PathVariableFormatException e) {
+		} catch (BadRequestException | PathVariableConversionException e) {
 			ErrorDataImpl errorData = new ErrorDataImpl()
 					.setMessage("bad request")
 					.putStatus(HttpStatus.BAD_REQUEST)

@@ -1,6 +1,7 @@
 package com.jkojote.server.impl;
 
 import com.jkojote.server.ControllerMethod;
+import com.jkojote.server.PathVariableConverter;
 
 public class TypeParameter implements ControllerMethod.Parameter {
 	private int index;
@@ -23,7 +24,12 @@ public class TypeParameter implements ControllerMethod.Parameter {
 
 	@Override
 	public String getName() {
-		return null;
+		return "";
+	}
+
+	@Override
+	public PathVariableConverter<?> getConverter() {
+		return String::valueOf;
 	}
 
 	@Override

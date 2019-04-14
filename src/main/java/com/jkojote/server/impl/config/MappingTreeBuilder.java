@@ -14,6 +14,7 @@ import com.jkojote.server.annotation.PutMapping;
 import com.jkojote.server.annotation.RequestMapping;
 import com.jkojote.server.exceptions.InvalidControllerBasePathException;
 import com.jkojote.server.exceptions.InvalidControllerMethodException;
+import com.jkojote.server.exceptions.InvalidMappingException;
 import com.jkojote.server.exceptions.InvalidPathTemplateException;
 import com.jkojote.server.utils.Preconditions;
 import com.jkojote.server.utils.Regex;
@@ -28,8 +29,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import sun.awt.geom.AreaOp;
+
 class MappingTreeBuilder {
-	private static final ControllerMethodCreator METHOD_CREATOR = new ControllerMethodCreator();
+	private static final ControllerMethodBuilder METHOD_CREATOR = new ControllerMethodBuilder();
 	private HashMap<Class<? extends Annotation>, HttpMethod> annotationMethodMap;
 	private Set<Class<? extends Annotation>> methodAnnotations;
 
@@ -98,7 +101,14 @@ class MappingTreeBuilder {
 	}
 
 	private ControllerMethod createControllerMethod(String pathTemplate, Object object, Method method) {
-		return METHOD_CREATOR.create(pathTemplate, object, method);
+		try {
+			return METHOD_CREATOR.buildOf(pathTemplate, object, method);
+		} catch (InvalidMappingException e) {
+			throw new InvalidMappingException(
+				"cannot map method with template: " + pathTemplate,
+				e
+			);
+		}
 	}
 
 	private Mapping getFirstMapping(Method method) {
