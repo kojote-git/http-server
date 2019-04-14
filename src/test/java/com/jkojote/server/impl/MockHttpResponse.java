@@ -13,11 +13,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.sound.sampled.Line;
 
 class MockHttpResponse implements HttpResponse {
 	static final Pattern STATUS_LINE_PATTERN =

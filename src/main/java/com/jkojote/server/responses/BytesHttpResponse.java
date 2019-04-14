@@ -21,4 +21,14 @@ public class BytesHttpResponse extends AbstractHttpResponse {
 		putHeader(name, value);
 		return this;
 	}
+
+	public BytesHttpResponse addHeader(String name, long value) {
+		putHeader(name, String.valueOf(value));
+		return this;
+	}
+
+	public BytesHttpResponse addHeader(String name, Object value) {
+		putHeader(name, value.toString());
+		return this;
+	}
 }

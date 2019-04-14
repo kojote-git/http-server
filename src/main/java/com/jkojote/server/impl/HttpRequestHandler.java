@@ -107,7 +107,7 @@ class HttpRequestHandler implements Runnable {
 			HttpResponse internalError = configuration.getResponseOnError(
 				HttpStatus.INTERNAL_ERROR, errorData
 			);
-			LOG.error("An exception occured ", e);
+			LOG.error("An exception occurred ", e);
 			writeResponse(out, internalError == null ? Responses.INTERNAL_ERROR : internalError);
 		}
 	}
@@ -118,7 +118,7 @@ class HttpRequestHandler implements Runnable {
 		Map<HeaderName, String> headers = readHeaders(in);
 		long contentLength = getContentLength(headers);
 		HttpRequestBody body = getRequestBody(contentLength, in);
-		QueryString queryString = extractQueryString(requestLine, true);
+		QueryString queryString = parseQueryString(firstLine, true);
 		return new HttpRequestImpl(
 			firstLine, requestLine.path, requestLine.method,
 			body, queryString, headers
@@ -182,13 +182,13 @@ class HttpRequestHandler implements Runnable {
 		return headers;
 	}
 
-	private QueryString extractQueryString(RequestLine requestLine, boolean ignoreMalformedParameters) {
-		String url = requestLine.path;
-		int beginIndex = url.indexOf('?');
-		if (beginIndex == -1) {
+	private QueryString parseQueryString(String requestLine, boolean ignoreMalformedParameters) {
+		int begin = requestLine.indexOf('?');
+		if (begin == -1) {
 			return new QueryStringImpl("");
 		}
-		String queryString = url.substring(beginIndex + 1);
+		int end = requestLine.lastIndexOf(' ');
+		String queryString = requestLine.substring(begin + 1, end);
 		return new QueryStringImpl(queryString, ignoreMalformedParameters);
 	}
 

@@ -21,6 +21,8 @@ public class HeaderNameTest {
 	public void equals_testEquality() {
 		assertEquals(HeaderName.of("HEADER"), HeaderName.of("header"));
 		assertNotEquals(HeaderName.of("HEADER1"), HeaderName.of("HEADER2"));
+		HeaderName n1 = HeaderName.of("header");
+		assertEquals(n1, n1);
 	}
 
 	@Test

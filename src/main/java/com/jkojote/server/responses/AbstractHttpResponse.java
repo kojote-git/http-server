@@ -49,15 +49,7 @@ public abstract class AbstractHttpResponse implements HttpResponse {
 		this.responseBody = body;
 	}
 
-	protected void putHeader(HttpHeader header) {
-		headers.put(HeaderName.of(header.getName()), header.getValue());
-	}
-
 	protected void putHeader(String name, String value) {
 		headers.put(HeaderName.of(name), value);
-	}
-
-	protected void putHeader(HeaderName name, String value) {
-		headers.put(name, value);
 	}
 }

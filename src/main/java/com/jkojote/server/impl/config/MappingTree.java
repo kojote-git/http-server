@@ -121,7 +121,7 @@ class MappingTree {
 			if (nextNode != null && isPathVariable(nodeValue)) {
 				if (!nodeValue.equals(nextNode.getValue())) {
 					throw new IllegalStateException(
-							"cannot have two different path variables at the same level"
+						"cannot have two different path variables at the same level"
 					);
 				}
 			} else if (nextNode == null || nextNode.isPathVariable()) {

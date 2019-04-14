@@ -17,6 +17,12 @@ public final class IOUtils {
 		}
 	}
 
+	public static byte[] readToBytes(InputStream in) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		transfer(in, out, 4096);
+		return out.toByteArray();
+	}
+
 	public static byte[] readResource(String path) throws IOException {
 		return readResource(path, IOUtils.class.getClassLoader());
 	}

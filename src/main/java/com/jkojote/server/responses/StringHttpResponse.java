@@ -18,4 +18,14 @@ public class StringHttpResponse extends AbstractHttpResponse {
 		putHeader(name, value);
 		return this;
 	}
+
+	public StringHttpResponse addHeader(String name, Object value) {
+		putHeader(name, value.toString());
+		return this;
+	}
+
+	public StringHttpResponse addHeader(String name, long value) {
+		putHeader(name, String.valueOf(value));
+		return this;
+	}
 }

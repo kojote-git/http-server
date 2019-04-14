@@ -21,4 +21,14 @@ public class StreamHttpResponse extends AbstractHttpResponse {
 		putHeader(name, value);
 		return this;
 	}
+
+	public StreamHttpResponse addHeader(String name, Object value) {
+		putHeader(name, value.toString());
+		return this;
+	}
+
+	public StreamHttpResponse addHeader(String name, long value) {
+		putHeader(name, String.valueOf(value));
+		return this;
+	}
 }
