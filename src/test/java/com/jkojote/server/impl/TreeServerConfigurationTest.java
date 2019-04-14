@@ -28,11 +28,11 @@ public class TreeServerConfigurationTest {
 	public void init() {
 		config = new TreeServerConfiguration();
 		config
-			.addControllerMethod("/hello/{echo}", HttpMethod.GET, (req, vars) -> {
+			.addMapping("/hello/{echo}", HttpMethod.GET, (req, vars) -> {
 				String echo = vars.getPathVariable("echo");
 				return stringResponse(HttpStatus.OK, echo);
 			})
-			.addControllerMethod("/hello/{echo}/{message}", HttpMethod.GET, (req, vars) -> {
+			.addMapping("/hello/{echo}/{message}", HttpMethod.GET, (req, vars) -> {
 				String name = vars.getPathVariable("echo");
 				String message = vars.getPathVariable("message");
 				return stringResponse(HttpStatus.OK, name + "/" + message);

@@ -151,7 +151,12 @@ class HttpRequestHandler implements Runnable {
 		} catch (URISyntaxException e) {
 			throw new BadRequestException("malformed uri");
 		}
-		return uri;
+		int beginOfTheQueryString = uri.indexOf('?');
+		if (beginOfTheQueryString == -1) {
+			return uri;
+		} else {
+			return uri.substring(0, beginOfTheQueryString);
+		}
 	}
 
 	private static class RequestLine {
