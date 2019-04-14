@@ -1,4 +1,4 @@
-package com.jkojote.server.impl;
+package com.jkojote.server;
 
 import org.junit.Test;
 

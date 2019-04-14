@@ -29,8 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import sun.awt.geom.AreaOp;
-
 class MappingTreeBuilder {
 	private static final ControllerMethodBuilder METHOD_CREATOR = new ControllerMethodBuilder();
 	private HashMap<Class<? extends Annotation>, HttpMethod> annotationMethodMap;
@@ -239,25 +237,6 @@ class MappingTreeBuilder {
 		public Mapping(String path, HttpMethod method) {
 			this.path = path;
 			this.method = method;
-		}
-	}
-
-	private static class AnnotatedControllerMethod implements FunctionalResponse {
-		private Object controller;
-		private Method method;
-
-		AnnotatedControllerMethod(Object controller, Method method) {
-			this.controller = controller;
-			this.method = method;
-		}
-
-		@Override
-		public HttpResponse process(HttpRequest request, PathVariables variables) {
-			try {
-				return (HttpResponse) method.invoke(controller, request, variables);
-			} catch (InvocationTargetException | IllegalAccessException e) {
-				throw new RuntimeException(e);
-			}
 		}
 	}
 }

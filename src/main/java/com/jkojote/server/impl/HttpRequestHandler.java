@@ -183,7 +183,7 @@ class HttpRequestHandler implements Runnable {
 		if (beginIndex == -1) {
 			return new QueryStringImpl("");
 		}
-		String queryString = url.substring(beginIndex);
+		String queryString = url.substring(beginIndex + 1);
 		return new QueryStringImpl(queryString, ignoreMalformedParameters);
 	}
 

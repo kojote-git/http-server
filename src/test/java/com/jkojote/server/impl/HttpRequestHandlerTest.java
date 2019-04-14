@@ -3,6 +3,7 @@ package com.jkojote.server.impl;
 import com.jkojote.server.HttpMethod;
 import com.jkojote.server.HttpResponse;
 import com.jkojote.server.HttpStatus;
+import com.jkojote.server.QueryString;
 import com.jkojote.server.ServerConfiguration;
 import com.jkojote.server.bodies.ByteResponseBody;
 import com.jkojote.server.utils.IOUtils;
@@ -24,7 +25,7 @@ public class HttpRequestHandlerTest {
 	@Test
 	public void handleRequest_case1() throws IOException {
 		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-		Socket socket = mockSocketWithRequest("request_case1", responseStream);
+		Socket socket = mockSocketWithRequestFromResource("request_case1", responseStream);
 		HttpResponse response = HttpResponseBuilder.create()
 			.addHeader("Content-type", "text/plain")
 			.addHeader("Content-length", "" + 5)
@@ -46,7 +47,7 @@ public class HttpRequestHandlerTest {
 	@Test
 	public void handleRequest_case2() throws IOException {
 		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-		Socket socket = mockSocketWithRequest("request_case2", responseStream);
+		Socket socket = mockSocketWithRequestFromResource("request_case2", responseStream);
 		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> null);
 		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
 		handler.run();
@@ -56,14 +57,53 @@ public class HttpRequestHandlerTest {
 	@Test
 	public void handleRequest_case3() throws IOException {
 		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
-		Socket socket = mockSocketWithRequest("request_case3", responseStream);
+		Socket socket = mockSocketWithRequestFromResource("request_case3", responseStream);
 		ServerConfiguration resolver = new MockRequestResolver(null);
 		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
 		handler.run();
 		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.NOT_FOUND);
 	}
 
-	private Socket mockSocketWithRequest(String pathToRequest, OutputStream responseStream) throws IOException {
+	@Test
+	public void handleRequest_testParsedQueryParams() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET /hello?a=1&b=2 HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> {
+			QueryString str = req.getQueryString();
+			String a = str.getParameterValue("a");
+			String b = str.getParameterValue("b");
+			assertEquals("1", a);
+			assertEquals("2", b);
+			return null;
+		});
+		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
+		handler.run();
+	}
+
+	@Test
+	public void handleRequest_testParsedEncodedQueryParams() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET /hello?path=%2Fhello HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> {
+			QueryString str = req.getQueryString();
+			String a = str.getParameterValue("path");
+			assertEquals("/hello", a);
+			return null;
+		});
+		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
+		handler.run();
+	}
+
+	private Socket mockSocketWithRequest(String request, OutputStream responseStream) throws IOException {
+		Socket socket = mock(Socket.class);
+		when(socket.getInputStream()).then(mock -> {
+			return new ByteArrayInputStream(request.getBytes());
+		});
+		when(socket.getOutputStream()).then(mock -> responseStream);
+		return socket;
+	}
+
+	private Socket mockSocketWithRequestFromResource(String pathToRequest, OutputStream responseStream) throws IOException {
 		Socket socket = mock(Socket.class);
 		when(socket.getInputStream()).then(mock -> {
 			try {
