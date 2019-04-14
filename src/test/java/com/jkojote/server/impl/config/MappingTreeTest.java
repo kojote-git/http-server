@@ -15,6 +15,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -184,6 +185,21 @@ public class MappingTreeTest {
 		PathNode b = getChildNode(root, "b");
 		assertNotNull(b);
 		assertEquals(0, b.getChildren().size());
+	}
+
+	@Test(expected = MergeConflictException.class)
+	public void addControllerMethod_raiseMergeConflict() {
+		MappingTree tree = new MappingTree();
+		tree.addFunctionalResponse("/a", HttpMethod.GET, (req, vars) -> null);
+		tree.addFunctionalResponse("/a", HttpMethod.GET, (req, vars) -> null);
+	}
+
+	@Test
+	public void addControllerMethod_overwriteOnMergeConflict() {
+		MappingTree tree = new MappingTree();
+		tree.addFunctionalResponse("/a", HttpMethod.GET, (req, vars) -> null);
+		tree.addFunctionalResponse("/a", HttpMethod.GET, (req, vars) -> null,
+				MergeConflictOption.OVERWRITE);
 	}
 
 	@Test

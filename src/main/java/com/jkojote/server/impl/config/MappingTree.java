@@ -106,7 +106,7 @@ class MappingTree {
 		);
 	}
 
-
+	// only for internal usage
 	void addControllerMethod(String pathTemplate,
 							 HttpMethod httpMethod,
 							 ControllerMethod controllerMethod,
@@ -131,9 +131,9 @@ class MappingTree {
 			currentNode = nextNode;
 		}
 		putMethod(currentNode, httpMethod,
-				controllerMethod,
-				pathTemplate,
-				mergeConflictOption
+			controllerMethod,
+			pathTemplate,
+			mergeConflictOption
 		);
 	}
 

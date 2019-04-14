@@ -10,6 +10,8 @@ import java.net.ServerSocket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.net.ssl.SSLServerSocket;
+
 public class HttpServer implements Runnable {
 	private static Logger LOG = LoggerFactory.getLogger("com.jkojote.server.HttpServer");
 
