@@ -15,8 +15,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -62,6 +64,32 @@ public class HttpRequestHandlerTest {
 		HttpRequestHandler handler = new HttpRequestHandler(socket, resolver);
 		handler.run();
 		assertEquals(new MockHttpResponse(responseStream.toByteArray()), Responses.NOT_FOUND);
+	}
+
+	@Test
+	public void handleRequest_case4() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET /hello? HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> {
+			assertEquals("/hello", req.getPath());
+			Iterator<?> iterator = req.getQueryString().getParameters().iterator();
+			assertFalse(iterator.hasNext());
+			return null;
+		});
+		new HttpRequestHandler(socket, resolver).run();
+	}
+
+	@Test
+	public void handleRequest_case5() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET /? HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver((req, vars) -> {
+			assertEquals("/", req.getPath());
+			Iterator<?> iterator = req.getQueryString().getParameters().iterator();
+			assertFalse(iterator.hasNext());
+			return null;
+		});
+		new HttpRequestHandler(socket, resolver).run();
 	}
 
 	@Test
