@@ -7,6 +7,7 @@ import com.jkojote.server.HttpResponse;
 import com.jkojote.server.HttpStatus;
 import com.jkojote.server.PathVariables;
 import com.jkojote.server.ServerConfiguration;
+import com.jkojote.server.responses.StringHttpResponse;
 
 import java.util.Arrays;
 import java.util.Collections;

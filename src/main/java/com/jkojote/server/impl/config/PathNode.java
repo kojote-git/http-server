@@ -1,7 +1,6 @@
 package com.jkojote.server.impl.config;
 
 import com.jkojote.server.ControllerMethod;
-import com.jkojote.server.FunctionalResponse;
 import com.jkojote.server.HttpMethod;
 
 import java.util.Collection;

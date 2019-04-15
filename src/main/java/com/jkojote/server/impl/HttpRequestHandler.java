@@ -126,12 +126,12 @@ class HttpRequestHandler implements Runnable {
 	}
 
 	private RequestLine parseRequestLine(String requestLine) {
-		if (!REQUEST_LINE_PATTERN.matcher(requestLine).matches()) {
-			throw new BadRequestException("malformed request line");
-		}
 		Matcher methodMatcher = METHOD_PATTERN.matcher(requestLine);
 		if (!methodMatcher.find()) {
 			throw new BadRequestException("unsupported method");
+		}
+		if (!REQUEST_LINE_PATTERN.matcher(requestLine).matches()) {
+			throw new BadRequestException("malformed request line");
 		}
 		String method = methodMatcher.group();
 		String uri = getUri(requestLine);
@@ -176,7 +176,7 @@ class HttpRequestHandler implements Runnable {
 			String[] header = line.split(":");
 			String name = header[0];
 			String value = (header.length == 1) ? "" : header[1];
-			headers.put(HeaderName.of(value), name);
+			headers.put(HeaderName.of(name), value);
 			line = readLine(in);
 		}
 		return headers;
@@ -195,7 +195,7 @@ class HttpRequestHandler implements Runnable {
 	private long getContentLength(Map<HeaderName, String> headers) {
 		String header = headers.get(HeaderName.of("Content-Length"));
 		try {
-			return header == null ? 0 : Long.parseLong(header);
+			return header == null ? 0 : Long.parseLong(header.trim());
 		} catch (NumberFormatException e) {
 			throw new BadRequestException("Illegal value for \"Content-Length\" header: " + header);
 		}

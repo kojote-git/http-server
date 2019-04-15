@@ -17,6 +17,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Iterator;
 
+import javax.print.DocFlavor;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
@@ -90,6 +92,46 @@ public class HttpRequestHandlerTest {
 			return null;
 		});
 		new HttpRequestHandler(socket, resolver).run();
+	}
+
+	@Test
+	public void handleRequest_case6() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET  HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver(null);
+		new HttpRequestHandler(socket, resolver).run();
+		HttpResponse response = new MockHttpResponse(responseStream.toByteArray());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+	}
+
+	@Test
+	public void handleRequest_case7() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("METHOD /root HTTP/1.1\r\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver(null);
+		new HttpRequestHandler(socket, resolver).run();
+		HttpResponse response = new MockHttpResponse(responseStream.toByteArray());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+	}
+
+	@Test
+	public void handleRequest_case8() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequest("GET /root HTTP/1.1\rn\n", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver(null);
+		new HttpRequestHandler(socket, resolver).run();
+		HttpResponse response = new MockHttpResponse(responseStream.toByteArray());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
+	}
+
+	@Test
+	public void handleRequest_case9() throws IOException {
+		ByteArrayOutputStream responseStream = new ByteArrayOutputStream();
+		Socket socket = mockSocketWithRequestFromResource("request_case9", responseStream);
+		ServerConfiguration resolver = new MockRequestResolver(null);
+		new HttpRequestHandler(socket, resolver).run();
+		HttpResponse response = new MockHttpResponse(responseStream.toByteArray());
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatus());
 	}
 
 	@Test
