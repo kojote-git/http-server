@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
+import static com.jkojote.server.impl.QueryStringTokenizer.QueryStringToken;
 
 class QueryStringImpl implements QueryString {
 	private Map<String, String> parameters;
@@ -15,8 +16,8 @@ class QueryStringImpl implements QueryString {
 		if (!queryString.isEmpty()) {
 			QueryStringTokenizer tokenizer =
 					new QueryStringTokenizer(queryString, ignoreMalformedParameters);
-			while (tokenizer.nextToken()) {
-				parameters.put(tokenizer.getKey(), tokenizer.getValue());
+			for (QueryStringToken token : tokenizer) {
+				parameters.put(token.getKey(), token.getValue());
 			}
 		}
 	}

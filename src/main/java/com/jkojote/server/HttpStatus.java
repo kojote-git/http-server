@@ -2,7 +2,8 @@ package com.jkojote.server;
 
 import static com.jkojote.server.utils.Preconditions.checkNotNull;
 
-public final class HttpStatus {
+public final class
+HttpStatus {
 	public static final HttpStatus OK = HttpStatus.of(200, "OK");
 	public static final HttpStatus CREATED = HttpStatus.of(201, "Created");
 	public static final HttpStatus ACCEPTED = HttpStatus.of(202, "Accepted");

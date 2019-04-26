@@ -2,11 +2,12 @@ package com.jkojote.server.impl;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
-class QueryStringTokenizer {
+class QueryStringTokenizer implements Iterable<QueryStringTokenizer.QueryStringToken> {
 	private QueryStringToken firstToken;
 	private QueryStringToken lastToken;
-	private QueryStringToken currentToken;
 	private boolean ignoreMalformedParameters = true;
 
 	QueryStringTokenizer(String queryString) {
@@ -50,32 +51,35 @@ class QueryStringTokenizer {
 		}
 	}
 
-	boolean nextToken() {
-		if (currentToken == lastToken) {
-			return false;
-		} else if (currentToken == null) {
-			currentToken = firstToken;
-		} else {
+	@Override
+	public Iterator<QueryStringToken> iterator() {
+		return new TokenIterator(this);
+	}
+
+	private static class TokenIterator implements Iterator<QueryStringToken> {
+		private QueryStringToken currentToken;
+
+		private TokenIterator(QueryStringTokenizer tokenizer) {
+			this.currentToken = tokenizer.firstToken;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentToken != null;
+		}
+
+		@Override
+		public QueryStringToken next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+			QueryStringToken token = currentToken;
 			currentToken = currentToken.nextToken;
+			return token;
 		}
-		return currentToken != null;
 	}
 
-	String getKey() {
-		if (currentToken == null) {
-			throw new IllegalStateException("tokenizer has run out of tokens");
-		}
-		return currentToken.key;
-	}
-
-	String getValue() {
-		if (currentToken == null) {
-			throw new IllegalStateException("tokenizer has run out of tokens");
-		}
-		return currentToken.value;
-	}
-
-	private static class QueryStringToken {
+	static class QueryStringToken {
 		private String key;
 		private String value;
 		private QueryStringToken nextToken;
@@ -85,5 +89,12 @@ class QueryStringTokenizer {
 			this.value = value;
 		}
 
+		public String getKey() {
+			return key;
+		}
+
+		public String getValue() {
+			return value;
+		}
 	}
 }

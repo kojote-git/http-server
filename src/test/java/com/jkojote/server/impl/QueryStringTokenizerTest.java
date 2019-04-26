@@ -2,21 +2,25 @@ package com.jkojote.server.impl;
 
 import org.junit.Test;
 
+import java.util.Iterator;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static com.jkojote.server.impl.QueryStringTokenizer.QueryStringToken;
 
 public class QueryStringTokenizerTest {
 
 	@Test
 	public void tokenize_tokenizeQueryString() {
 		QueryStringTokenizer tokenizer = new QueryStringTokenizer("a=1&b=&c");
+		Iterator<QueryStringToken> iterator = tokenizer.iterator();
 
-		checkNextToken(tokenizer, "a", "1");
-		checkNextToken(tokenizer, "b", "");
-		checkNextToken(tokenizer, "c", "");
+		checkNextToken(iterator, "a", "1");
+		checkNextToken(iterator, "b", "");
+		checkNextToken(iterator, "c", "");
 
-		assertFalse(tokenizer.nextToken());
+		assertFalse(iterator.hasNext());
 	}
 
 	@Test
@@ -30,13 +34,14 @@ public class QueryStringTokenizerTest {
 				amp, space, eq, mod, mod
 			)
 		);
+		Iterator<QueryStringToken> iterator = tokenizer.iterator();
 
-		checkNextToken(tokenizer, "amp", "&");
-		checkNextToken(tokenizer, "space", " ");
-		checkNextToken(tokenizer, "eq", "=");
-		checkNextToken(tokenizer, "%", "%");
+		checkNextToken(iterator, "amp", "&");
+		checkNextToken(iterator, "space", " ");
+		checkNextToken(iterator, "eq", "=");
+		checkNextToken(iterator, "%", "%");
 
-		assertFalse(tokenizer.nextToken());
+		assertFalse(iterator.hasNext());
 	}
 
 	@Test
@@ -44,15 +49,17 @@ public class QueryStringTokenizerTest {
 		QueryStringTokenizer tokenizer = new QueryStringTokenizer(
 			"a=1&b=%&%&c=2&"
 		);
+		Iterator<QueryStringToken> iterator = tokenizer.iterator();
 
-		checkNextToken(tokenizer, "a", "1");
-		checkNextToken(tokenizer, "c", "2");
-		assertFalse(tokenizer.nextToken());
+		checkNextToken(iterator, "a", "1");
+		checkNextToken(iterator, "c", "2");
+		assertFalse(iterator.hasNext());
 	}
 
-	private void checkNextToken(QueryStringTokenizer tokenizer, String expectedKey, String expectedValue) {
-		assertTrue(tokenizer.nextToken());
-		assertEquals(expectedKey, tokenizer.getKey());
-		assertEquals(expectedValue, tokenizer.getValue());
+	private void checkNextToken(Iterator<QueryStringToken> iterator, String expectedKey, String expectedValue) {
+		assertTrue(iterator.hasNext());
+		QueryStringToken nextToken = iterator.next();
+		assertEquals(expectedKey, nextToken.getKey());
+		assertEquals(expectedValue, nextToken.getValue());
 	}
 }
