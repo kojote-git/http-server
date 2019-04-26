@@ -15,42 +15,46 @@ we pass to it:
 public class EchoController {
 
     @RequestMapping("/echo/{message}")
-    public HttpResponse echoMessage(HttpRequest request, PathVariables vars) {
-        String message = vars.getPathVariable("message");
-        return stringResponse(HttpStatus.OK, message);
+    public HttpResponse echoMessage(@PathVar("message") String message) {
+        return new StringHttpResponse(HttpStatus.OK, message);
     }
 
     @RequestMapping("/echo/{message}/{n}")
-    public HttpResponse echoMessageNTimes(HttpRequest request, PathVariables vars) {
-        String message = vars.getPathVariable("message");
-        int n = Integer.parseInt(vars.getPathVariable("n"));
+    @DirectVariablesMapping
+    public HttpResponse echoMessageNTimes(String message, int n) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < n; i++) {
             sb.append(message);
         }
-        return stringResponse(HttpStatus.OK, sb.toString());
+        return new StringHttpResponse(HttpStatus.OK, sb.toString());
     }
 }
 ```
 
-Here we have two controller methods. The first method returns a value of `message` parameter that is substituted when 
+Here we have two controller methods. The first method returns a value of `message` path variable that is substituted when 
 we actually make request to the server; the second method returns the `message` `n` times.
 
-The `stringResponse(HttpStatus, String)` method is a utility method to construct responses with the contents of the string passed
-to it:
-```java
-private HttpResponse stringResponse(HttpStatus status, String str) {
-    byte[] bytes = str.getBytes();
-    return HttpResponseBuilder.create()
-        .setStatus(status)
-        .addHeader("Content-Type", "text/plain")
-        .addHeader("Content-Length", bytes)
-        .setResponseBody(new ByteResponseBody(bytes))
-        .build();
-}
-```
+Also, note that there are serveral options of how to retrieve values of path variables. 
 
-Now we need to run the server itself.
+The first option is by using `@PathVar` annotation, which is quite straightforward. Using it, you define which method parameter
+corresponds to which path variable. The value of path variable is automatically converted to the type of parameter. 
+
+The second, which is interesting one, is to declare `@DirectVariablesMapping` on your controller method which indicates
+that you want path variables from your URI template to be directly mapped onto parameters of your controller method. You can also specify from which position this mapping starts. This might be useful if you need, for example, information about the request itself. Than this method will look like this:
+
+```java
+    @RequestMapping("/echo/{message}/{n}")
+    @DirectVariablesMapping(startIndex = 1)
+    public HttpResponse echoMessageNTimes(HttpRequest req, String message, int n) {
+        ...
+    }
+```
+Though this type of mapping has some limitations: 
+- you must specify the same number of parameters of your method as the number of path variables in your URI
+- these parameters must be at the end of parameters list and all other parameters that you want to inject into your method
+must precede this mapping between path variables and parameters.
+
+Having all of this, we now can configure and run the sever.
 
 ```java
 public class Main {
