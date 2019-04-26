@@ -37,7 +37,7 @@ we actually make request to the server; the second method returns the `message` 
 Also, note that there are serveral options of how to retrieve values of path variables. 
 
 The first option is by using `@PathVar` annotation, which is quite straightforward. Using it, you define which method parameter
-corresponds to which path variable. The value of path variable is automatically converted to the type of parameter. 
+corresponds to which path variable. The value of path variable is automatically converted to the type of the parameter. 
 
 The second, which is interesting one, is to declare `@DirectVariablesMapping` on your controller method which indicates
 that you want path variables from your URI template to be directly mapped onto parameters of your controller method. You can also specify from which position this mapping starts. This might be useful if you need, for example, information about the request itself. Than this method will look like this:
